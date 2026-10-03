@@ -33,8 +33,7 @@ CAPTION "About Explorer Mate"
 FONT 9, "Segoe UI"
 BEGIN
     DEFPUSHBUTTON   "Close", IDOK, 228, 200, 50, 14
-    ICON            IDI_APP, IDC_STATIC, 12, 6, 20, 20
-    LTEXT           "", IDC_ABOUT_TITLE, 40, 12, 238, 10
+    LTEXT           "", IDC_ABOUT_TITLE, 12, 12, 266, 10
     LTEXT           "Extra commands for File Explorer on Windows 11.", IDC_STATIC, 12, 30, 266, 10
     LTEXT           "-  New folder with selection: move the selected items into a new folder.", IDC_STATIC, 12, 44, 266, 10
     LTEXT           "-  Bulk rename: rename many files at once with a name mask and a counter.", IDC_STATIC, 12, 56, 266, 10
