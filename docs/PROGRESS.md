@@ -277,6 +277,16 @@ Chưa làm / để lại:
 - Bằng chứng: 114/114 test pass (thêm test kiểm tra icon mỗi lệnh trỏ tới thực sự có trong DLL); gọi `GetIcon` qua COM trên bản đã cài trả về id 101/103/105 (máy đang ở giao diện sáng); bảng so cỡ 16 px trên nền sáng và tối đọc được.
 - NOT RUN: nhìn icon trong menu chuột phải thật, và ở giao diện tối.
 
+## Lỗi: Explorer không tự cập nhật sau khi chạy lệnh (03/10/2026)
+
+- Người dùng báo: sau "New folder with selection" phải bấm F5 mới thấy kết quả.
+- Tái hiện bằng `scripts\test-view-refresh.ps1` (mở một cửa sổ Explorer trên fixture, chạy lệnh qua worker, so số mục cửa sổ đang hiển thị với trên đĩa): 3/3 lần cửa sổ hiện 4 mục thay vì 2 — thư mục mới có hiện, nhưng hai file đã chuyển đi vẫn còn trong danh sách.
+- Nguyên nhân (suy ra từ kết quả đo, khớp với cách `SHChangeNotify` hoạt động): thông báo thay đổi của Shell được xếp hàng trong tiến trình gửi; worker thoát ngay sau thao tác nên thông báo không tới Explorer.
+- Sửa: `ShellFileOperationGateway` gửi `SHChangeNotify` kèm `SHCNF_FLUSH` sau mỗi thao tác (`SHCNE_MKDIR`/`SHCNE_RMDIR` cho thư mục tạo/xóa, `SHCNE_UPDATEDIR` cho thư mục nguồn và đích).
+- Sau khi sửa: 3/3 lần cửa sổ hiện đúng 2 mục, không cần refresh. 114/114 test pass. Bản cài trên máy dev đã cập nhật.
+- `--diagnose-explorer` giờ in thêm `itemsInView` cho mỗi tab.
+- NOT RUN: kiểm tra tương tự cho Duplicate và Bulk rename (cùng cơ chế thông báo, chưa đo riêng); người dùng chưa xác nhận lại trên thư mục thật.
+
 ## Giai đoạn 3 — Phát hành
 
 Kênh: Microsoft Store, WinGet, file tải trực tiếp từ GitHub. Cả ba dùng chung một gói MSIX đầy đủ; bản dev vẫn dùng sparse package.

@@ -4,6 +4,7 @@
 
 #include <shellapi.h>
 #include <sherrors.h>
+#include <shlobj.h>
 #include <shobjidl_core.h>
 #include <wrl/client.h>
 #include <wrl/implements.h>
@@ -282,6 +283,27 @@ size_t SegmentEnd(const std::vector<domain::RenameStep>& steps, size_t begin) {
     return end;
 }
 
+// Tells open Explorer windows that the contents of `folder` changed, and waits until the
+// notification has been delivered. The worker exits right after its operation; shell change
+// notifications are queued in the sending process, so without the flush they are lost and
+// the file list keeps showing the old contents until the user presses F5.
+void NotifyFolderChanged(const std::wstring& folder) {
+    SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_PATHW | SHCNF_FLUSH, folder.c_str(), nullptr);
+}
+
+void NotifyParentsChanged(const std::vector<std::wstring>& paths) {
+    std::vector<std::wstring> notified;
+    for (const std::wstring& path : paths) {
+        std::wstring parent(domain::ParentOf(path));
+        const bool alreadyDone = std::any_of(notified.begin(), notified.end(),
+                                             [&](const std::wstring& done) { return SamePath(done, parent); });
+        if (!alreadyDone) {
+            NotifyFolderChanged(parent);
+            notified.push_back(std::move(parent));
+        }
+    }
+}
+
 bool ExistsOnDisk(const std::wstring& path) {
     return GetFileAttributesW(path.c_str()) != INVALID_FILE_ATTRIBUTES;
 }
@@ -314,6 +336,7 @@ domain::Status ShellFileOperationGateway::CreateNewFolder(const std::wstring& pa
     // CreateDirectoryW fails when anything already has this name, which is the ownership
     // guarantee the caller relies on. IFileOperation::NewItem could silently reuse or rename.
     if (CreateDirectoryW(path.c_str(), nullptr)) {
+        SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW | SHCNF_FLUSH, path.c_str(), nullptr);
         return domain::Unit{};
     }
     const DWORD error = GetLastError();
@@ -327,6 +350,7 @@ domain::Status ShellFileOperationGateway::CreateNewFolder(const std::wstring& pa
 domain::Status ShellFileOperationGateway::RemoveFolderIfEmpty(const std::wstring& path) {
     // RemoveDirectoryW refuses non-empty folders, so this can never delete user data.
     if (RemoveDirectoryW(path.c_str())) {
+        SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH, path.c_str(), nullptr);
         return domain::Unit{};
     }
     return domain::Error(domain::ErrorCode::OperationFailed,
@@ -340,24 +364,28 @@ OperationReport ShellFileOperationGateway::MoveItemsInto(const std::vector<std::
     if (FAILED(result)) {
         return AllFailed(sources, result);
     }
-    return RunBatch(ui_, sources, {},
-                    [&](IFileOperation& operation, IShellItem* item, size_t) {
-                        return operation.MoveItem(item, destination.Get(), nullptr, nullptr);
-                    });
+    OperationReport report =
+        RunBatch(ui_, sources, {}, [&](IFileOperation& operation, IShellItem* item, size_t) {
+            return operation.MoveItem(item, destination.Get(), nullptr, nullptr);
+        });
+    NotifyParentsChanged(sources);
+    NotifyFolderChanged(destinationFolder);
+    return report;
 }
 
 OperationReport ShellFileOperationGateway::DuplicateItems(const std::vector<std::wstring>& sources) {
     BatchOptions options;
     options.extraFlags = FOF_RENAMEONCOLLISION;
-    return RunBatch(ui_, sources, options,
-                    [&](IFileOperation& operation, IShellItem* item, size_t index) {
-                        HRESULT result = S_OK;
-                        const ComPtr<IShellItem> parent =
-                            ShellItemFor(std::wstring(domain::ParentOf(sources[index])), result);
-                        return FAILED(result)
-                                   ? result
-                                   : operation.CopyItem(item, parent.Get(), nullptr, nullptr);
-                    });
+    OperationReport report = RunBatch(
+        ui_, sources, options, [&](IFileOperation& operation, IShellItem* item, size_t index) {
+            HRESULT result = S_OK;
+            const ComPtr<IShellItem> parent =
+                ShellItemFor(std::wstring(domain::ParentOf(sources[index])), result);
+            return FAILED(result) ? result
+                                  : operation.CopyItem(item, parent.Get(), nullptr, nullptr);
+        });
+    NotifyParentsChanged(sources);
+    return report;
 }
 
 OperationReport ShellFileOperationGateway::RenameItems(
@@ -401,6 +429,7 @@ OperationReport ShellFileOperationGateway::RenameItems(
         }
         begin = end;
     }
+    NotifyFolderChanged(folder);
     return report;
 }
 

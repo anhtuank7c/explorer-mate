@@ -14,6 +14,10 @@ All notable changes to Explorer Mate are recorded here. The format follows
 - Command line for the three commands, an introduction window, and Explorer diagnostics.
 - Development install through a sparse package; release-style MSIX packaging script.
 
+### Fixed
+
+- File Explorer now shows the result of a command immediately; before, the file list could keep showing moved files until refreshed with F5.
+
 ### Security
 
 - Release binaries are built with Control Flow Guard, CET shadow-stack compatibility and a System32-only DLL search path for imports.

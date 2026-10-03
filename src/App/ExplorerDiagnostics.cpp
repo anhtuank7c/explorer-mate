@@ -42,7 +42,8 @@ void PrintTab(const infra::ExplorerTab& tab, const infra::ForegroundFocus& focus
                       L" focusInsideView=" + YesNo(focusInView));
     WriteLineToStdout(L"  folder=" + (tab.folder.empty() ? L"(virtual) " + tab.location : tab.folder));
     WriteLineToStdout(std::wstring(L"  selectionReadable=") + YesNo(tab.selectionReadable) +
-                      L" selected=" + std::to_wstring(tab.selection.size()));
+                      L" selected=" + std::to_wstring(tab.selection.size()) +
+                      L" itemsInView=" + std::to_wstring(tab.itemsInView));
     for (const std::wstring& path : tab.selection) {
         WriteLineToStdout(L"    " + std::wstring(domain::NameOf(path)));
     }

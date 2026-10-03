@@ -93,6 +93,9 @@ bool DescribeTab(IDispatch* entry, ExplorerTab& tab) {
 
     ComPtr<IFolderView2> folderView;
     if (SUCCEEDED(shellView.As(&folderView))) {
+        if (FAILED(folderView->ItemCount(SVGIO_ALLVIEW, &tab.itemsInView))) {
+            tab.itemsInView = -1;
+        }
         ReadFolder(folderView.Get(), tab);
         ReadSelection(folderView.Get(), tab);
     }

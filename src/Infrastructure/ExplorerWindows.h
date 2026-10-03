@@ -16,6 +16,7 @@ struct ExplorerTab {
     bool isActiveTab = false;   // The tab currently shown in its frame.
     std::wstring folder;        // Filesystem path; empty for virtual folders (Home, Search...).
     std::wstring location;      // Display/parsing name, also set for virtual folders.
+    int itemsInView = -1;       // Items the file list currently shows; -1 when unknown.
     bool selectionReadable = false;        // False when an item has no filesystem path.
     std::vector<std::wstring> selection;   // Filesystem paths of the selected items.
 };
