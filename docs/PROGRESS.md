@@ -267,7 +267,15 @@ Chưa làm / để lại:
 - `scripts/build-icons.ps1` render SVG bằng Edge headless ra: `src/App/ExplorerMate.ico` (16-256 px), 21 logo trong `packaging/Assets` (gồm các biến thể targetsize/unplated), `packaging/store/StoreLogo-300.png`.
 - EXE có icon (`IDI_APP`); khay hệ thống, thanh tiêu đề các dialog và cửa sổ giới thiệu dùng icon này. Gói có `resources.pri` (makepri) để Windows chọn đúng biến thể logo.
 - Bằng chứng: 113/113 test pass; gói MSIX pack được; chụp cửa sổ giới thiệu của bản đã cài thấy icon ở thanh tiêu đề và trong dialog; bảng so cỡ 16/24/32/48 px trên nền sáng và tối đọc được.
-- NOT RUN: icon trên taskbar, Start menu, khay hệ thống và nhóm lệnh trong menu chuột phải (cần người nhìn). Ba lệnh menu chưa có icon riêng.
+- Người dùng xác nhận (03/10/2026): icon ở taskbar, menu và Start menu đều hiển thị đẹp.
+
+### Icon cho ba lệnh menu
+
+- Người dùng chọn dùng icon của Lucide (giấy phép ISC, ghi trong `THIRD_PARTY_NOTICES.md`): `folder-plus` (gom nhóm), `pen-line` (đổi tên), `copy` (nhân bản). File gốc ở `packaging/icon/menu/`.
+- Menu chuột phải không tự đổi màu icon, nên mỗi icon có hai bản: nét tối cho menu sáng, nét trắng cho menu tối. `IExplorerCommand::GetIcon` trả `"<đường dẫn DLL>,-<id>"` và chọn bản theo `AppsUseLightTheme` trong registry.
+- `build-icons.ps1` sinh sáu file `src/ShellExtension/icons/*.ico` (16, 20, 24, 32 px).
+- Bằng chứng: 114/114 test pass (thêm test kiểm tra icon mỗi lệnh trỏ tới thực sự có trong DLL); gọi `GetIcon` qua COM trên bản đã cài trả về id 101/103/105 (máy đang ở giao diện sáng); bảng so cỡ 16 px trên nền sáng và tối đọc được.
+- NOT RUN: nhìn icon trong menu chuột phải thật, và ở giao diện tối.
 
 ## Giai đoạn 3 — Phát hành
 

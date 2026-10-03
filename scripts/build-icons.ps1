@@ -28,13 +28,18 @@ $mainSvg = Get-Content (Join-Path $iconDir 'ExplorerMate.svg') -Raw
 $smallSvg = Get-Content (Join-Path $iconDir 'ExplorerMate-small.svg') -Raw
 $SmallDrawingMaxSize = 24
 
-# Renders the right master at $Size px into a transparent bitmap. Edge cannot open a window
-# as small as an icon, so the SVG is drawn in the corner of a larger page and cropped.
+# Renders the application icon at $Size px, from the master meant for that size.
 function New-IconBitmap([int]$Size) {
     $svg = if ($Size -le $SmallDrawingMaxSize) { $smallSvg } else { $mainSvg }
+    return New-SvgBitmap $svg $Size
+}
+
+# Renders SVG text at $Size px into a transparent bitmap. Edge cannot open a window as small
+# as an icon, so the SVG is drawn in the corner of a larger page and cropped.
+function New-SvgBitmap([string]$Svg, [int]$Size) {
     $page = Join-Path $workDir "render-$Size.html"
     $shot = Join-Path $workDir "render-$Size.png"
-    $html = "<!doctype html><html><head><meta charset='utf-8'><style>html,body{margin:0;background:transparent}svg{display:block;width:${Size}px;height:${Size}px}</style></head><body>$svg</body></html>"
+    $html = "<!doctype html><html><head><meta charset='utf-8'><style>html,body{margin:0;background:transparent}svg{display:block;width:${Size}px;height:${Size}px}</style></head><body>$Svg</body></html>"
     [IO.File]::WriteAllText($page, $html)
     if (Test-Path $shot) { Remove-Item $shot }
     $window = [Math]::Max(600, $Size)
@@ -98,29 +103,52 @@ Save-Icon 50 (Join-Path $assetDir 'StoreLogo.png')
 Save-Icon 100 (Join-Path $assetDir 'StoreLogo.scale-200.png')
 Save-PaddedLogo 300 240 (Join-Path $storeDir 'StoreLogo-300.png')
 
-# --- ICO (PNG-compressed entries) ----------------------------------------------------------
-$icoSizes = 16, 20, 24, 32, 40, 48, 64, 256
-$images = foreach ($size in $icoSizes) {
-    $bitmap = New-IconBitmap $size
-    $stream = New-Object IO.MemoryStream
-    $bitmap.Save($stream, [System.Drawing.Imaging.ImageFormat]::Png)
-    $bitmap.Dispose()
-    , $stream.ToArray()
+# --- ICO files (PNG-compressed entries) ----------------------------------------------------
+# $Render is called with a size and returns the bitmap for it.
+function Save-Ico([int[]]$Sizes, [scriptblock]$Render, [string]$Path) {
+    $images = foreach ($size in $Sizes) {
+        $bitmap = & $Render $size
+        $stream = New-Object IO.MemoryStream
+        $bitmap.Save($stream, [System.Drawing.Imaging.ImageFormat]::Png)
+        $bitmap.Dispose()
+        , $stream.ToArray()
+    }
+    $ico = New-Object IO.MemoryStream
+    $writer = New-Object IO.BinaryWriter $ico
+    $writer.Write([uint16]0); $writer.Write([uint16]1); $writer.Write([uint16]$Sizes.Count)
+    $offset = 6 + 16 * $Sizes.Count
+    for ($i = 0; $i -lt $Sizes.Count; $i++) {
+        $dimension = if ($Sizes[$i] -ge 256) { 0 } else { $Sizes[$i] }   # 0 means 256
+        $writer.Write([byte]$dimension); $writer.Write([byte]$dimension)
+        $writer.Write([byte]0); $writer.Write([byte]0)
+        $writer.Write([uint16]1); $writer.Write([uint16]32)
+        $writer.Write([uint32]$images[$i].Length); $writer.Write([uint32]$offset)
+        $offset += $images[$i].Length
+    }
+    foreach ($image in $images) { $writer.Write($image) }
+    $writer.Flush()
+    [IO.File]::WriteAllBytes($Path, $ico.ToArray())
 }
-$ico = New-Object IO.MemoryStream
-$writer = New-Object IO.BinaryWriter $ico
-$writer.Write([uint16]0); $writer.Write([uint16]1); $writer.Write([uint16]$icoSizes.Count)
-$offset = 6 + 16 * $icoSizes.Count
-for ($i = 0; $i -lt $icoSizes.Count; $i++) {
-    $dimension = if ($icoSizes[$i] -ge 256) { 0 } else { $icoSizes[$i] }   # 0 means 256
-    $writer.Write([byte]$dimension); $writer.Write([byte]$dimension)
-    $writer.Write([byte]0); $writer.Write([byte]0)
-    $writer.Write([uint16]1); $writer.Write([uint16]32)
-    $writer.Write([uint32]$images[$i].Length); $writer.Write([uint32]$offset)
-    $offset += $images[$i].Length
-}
-foreach ($image in $images) { $writer.Write($image) }
-$writer.Flush()
-[IO.File]::WriteAllBytes((Join-Path $RepoRoot 'src\App\ExplorerMate.ico'), $ico.ToArray())
 
-Write-Host "Wrote $((Get-ChildItem $assetDir -Filter *.png).Count) package logos, the Store logo and src\App\ExplorerMate.ico ($($icoSizes -join ', ') px)."
+$icoSizes = 16, 20, 24, 32, 40, 48, 64, 256
+Save-Ico $icoSizes { param($size) New-IconBitmap $size } (Join-Path $RepoRoot 'src\App\ExplorerMate.ico')
+
+# --- Context-menu command icons (Lucide, ISC license; see THIRD_PARTY_NOTICES.md) ----------
+# Line icons drawn in "currentColor". The menu does not tint icons, so each one is rendered
+# twice: dark strokes for the light theme, white strokes for the dark theme. The sizes are
+# the menu's icon size at 100, 125, 150 and 200 % display scaling.
+$menuDir = Join-Path $iconDir 'menu'
+$menuOut = Join-Path $RepoRoot 'src\ShellExtension\icons'
+New-Item -ItemType Directory -Force $menuOut | Out-Null
+$menuIcons = @{ 'folder-plus' = 'group'; 'pen-line' = 'rename'; 'copy' = 'duplicate' }
+$themes = @{ 'light' = '#1B1B1B'; 'dark' = '#FFFFFF' }
+foreach ($source in $menuIcons.Keys) {
+    $svg = Get-Content (Join-Path $menuDir "$source.svg") -Raw
+    foreach ($theme in $themes.Keys) {
+        $script:tintedSvg = $svg.Replace('currentColor', $themes[$theme])
+        Save-Ico @(16, 20, 24, 32) { param($size) New-SvgBitmap $script:tintedSvg $size } `
+            (Join-Path $menuOut "$($menuIcons[$source])-$theme.ico")
+    }
+}
+
+Write-Host "Wrote $((Get-ChildItem $assetDir -Filter *.png).Count) package logos, the Store logo, src\App\ExplorerMate.ico and $((Get-ChildItem $menuOut -Filter *.ico).Count) menu icons."

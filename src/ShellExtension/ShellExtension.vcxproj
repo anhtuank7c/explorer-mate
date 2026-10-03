@@ -32,6 +32,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ExplorerCommandBase.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="ShellLog.h" />
     <ClInclude Include="WorkerLauncher.h" />
     <ClInclude Include="WrlModule.h" />

@@ -82,6 +82,31 @@ public:
         Assert::IsTrue(state == ECS_ENABLED);
     }
 
+    // The shell is handed "<dll path>,-<id>"; the id must name an icon that is really there.
+    TEST_METHOD(EveryCommandNamesAnIconThatExistsInTheDll) {
+        const HMODULE library = LoadLibraryW(ShellExtensionPath().c_str());
+        for (const CLSID& classId : {kGroupCommand, kRenameCommand, kDuplicateCommand}) {
+            ComPtr<IClassFactory> factory;
+            ComPtr<IExplorerCommand> command;
+            Assert::IsTrue(SUCCEEDED(ClassObjectEntryPoint()(classId, IID_PPV_ARGS(&factory))));
+            Assert::IsTrue(SUCCEEDED(factory->CreateInstance(nullptr, IID_PPV_ARGS(&command))));
+
+            PWSTR raw = nullptr;
+            Assert::IsTrue(SUCCEEDED(command->GetIcon(nullptr, &raw)));
+            Assert::IsNotNull(raw);
+            const std::wstring reference(raw);
+            CoTaskMemFree(raw);
+
+            const size_t separator = reference.rfind(L",-");
+            Assert::IsTrue(separator != std::wstring::npos, reference.c_str());
+            Assert::IsTrue(std::filesystem::exists(reference.substr(0, separator)), reference.c_str());
+            const int iconId = std::stoi(reference.substr(separator + 2));
+            const HANDLE icon = LoadImageW(library, MAKEINTRESOURCEW(iconId), IMAGE_ICON, 16, 16, 0);
+            Assert::IsNotNull(icon, reference.c_str());
+            DestroyIcon(static_cast<HICON>(icon));
+        }
+    }
+
     TEST_METHOD(UnknownClassIsRejected) {
         ComPtr<IClassFactory> factory;
         Assert::IsTrue(FAILED(ClassObjectEntryPoint()(CLSID_NULL, IID_PPV_ARGS(&factory))));

@@ -30,6 +30,9 @@ public:
 protected:
     virtual std::wstring_view Title() const = 0;
     virtual app::ActionKind Action() const = 0;
+    // Icon resource of this DLL to show next to the title. The menu does not tint icons, so
+    // there is one drawn for the light menu and one for the dark menu.
+    virtual int IconResourceId(bool darkMenu) const = 0;
     // False hides the command when the selection contains a folder.
     virtual bool AcceptsFolders() const { return true; }
 };

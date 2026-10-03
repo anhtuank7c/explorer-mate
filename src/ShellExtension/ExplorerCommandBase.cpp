@@ -6,6 +6,7 @@
 #include <string>
 
 #include "Infrastructure/ShellSelection.h"
+#include "Infrastructure/WorkerProcess.h"
 #include "ShellExtension/ShellLog.h"
 #include "ShellExtension/WorkerLauncher.h"
 
@@ -24,6 +25,16 @@ bool IsFolder(IShellItem* item) {
     SFGAOF attributes = 0;
     return SUCCEEDED(item->GetAttributes(SFGAO_FOLDER | SFGAO_STREAM, &attributes)) &&
            (attributes & SFGAO_FOLDER) != 0 && (attributes & SFGAO_STREAM) == 0;
+}
+
+// The context menu follows the "app mode" theme. One cheap registry read per menu build.
+bool MenuUsesDarkTheme() {
+    DWORD lightTheme = 1;
+    DWORD size = sizeof(lightTheme);
+    const LSTATUS status = RegGetValueW(
+        HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+        L"AppsUseLightTheme", RRF_RT_REG_DWORD, nullptr, &lightTheme, &size);
+    return status == ERROR_SUCCESS && lightTheme == 0;
 }
 
 bool ContainsFolder(IShellItemArray* items) {
@@ -54,11 +65,24 @@ IFACEMETHODIMP ExplorerCommandBase::GetTitle(IShellItemArray*, PWSTR* name) {
     }
 }
 
+// The shell expects "<module path>,-<icon resource id>".
 IFACEMETHODIMP ExplorerCommandBase::GetIcon(IShellItemArray*, PWSTR* icon) {
-    if (icon != nullptr) {
-        *icon = nullptr;
+    if (icon == nullptr) {
+        return E_POINTER;
     }
-    return E_NOTIMPL;
+    *icon = nullptr;
+    try {
+        const std::wstring module = infra::SiblingPathOfModule(
+            reinterpret_cast<const void*>(&MenuUsesDarkTheme), L"ExplorerMate.Shell.dll");
+        if (module.empty()) {
+            return E_FAIL;
+        }
+        const std::wstring reference =
+            module + L",-" + std::to_wstring(IconResourceId(MenuUsesDarkTheme()));
+        return SHStrDupW(reference.c_str(), icon);
+    } catch (...) {
+        return E_OUTOFMEMORY;
+    }
 }
 
 IFACEMETHODIMP ExplorerCommandBase::GetToolTip(IShellItemArray*, PWSTR* tip) {
