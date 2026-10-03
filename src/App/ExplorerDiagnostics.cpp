@@ -2,6 +2,7 @@
 
 #include <windows.h>
 
+#include <chrono>
 #include <cwchar>
 #include <string>
 
@@ -24,6 +25,12 @@ std::wstring ClassOf(HWND window) {
     wchar_t name[128]{};
     const int length = window != nullptr ? GetClassNameW(window, name, 128) : 0;
     return std::wstring(name, static_cast<size_t>(length));
+}
+
+long long MillisecondsSince(std::chrono::steady_clock::time_point start) {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+               std::chrono::steady_clock::now() - start)
+        .count();
 }
 
 const wchar_t* YesNo(bool value) {
@@ -108,9 +115,13 @@ void PrintExplorerDiagnostics(unsigned delaySeconds) {
                       L") focus=" + Hex(focus.focus) + L" (" + focus.focusAncestry + L")");
     // Exactly what a keyboard shortcut pressed at this moment would be allowed to act on.
     const infra::ExplorerSelectionSource source;
+    const auto captureStart = std::chrono::steady_clock::now();
     const auto target = source.CaptureFocusedSelection();
-    std::wstring shortcut = std::wstring(L"shortcut focusInFileList=") +
-                            YesNo(source.FocusIsInFileList()) + L" target=";
+    const long long captureMs = MillisecondsSince(captureStart);
+    // The time is what the user waits between pressing a shortcut and the command starting.
+    std::wstring shortcut = std::wstring(L"shortcut captureMs=") + std::to_wstring(captureMs) +
+                            L" items=" + std::to_wstring(target.ok() ? target.value().size() : 0) +
+                            L" focusInFileList=" + YesNo(source.FocusIsInFileList()) + L" target=";
     if (target.ok()) {
         for (const std::wstring& path : target.value()) {
             shortcut += L"[" + std::wstring(domain::NameOf(path)) + L"]";
@@ -120,8 +131,10 @@ void PrintExplorerDiagnostics(unsigned delaySeconds) {
     }
     WriteLineToStdout(shortcut);
 
+    const auto enumerateStart = std::chrono::steady_clock::now();
     const auto tabs = infra::EnumerateExplorerTabs();
-    WriteLineToStdout(L"tabs=" + std::to_wstring(tabs.size()));
+    WriteLineToStdout(L"tabs=" + std::to_wstring(tabs.size()) + L" enumerateAllMs=" +
+                      std::to_wstring(MillisecondsSince(enumerateStart)));
     for (const infra::ExplorerTab& tab : tabs) {
         PrintTab(tab, focus);
     }

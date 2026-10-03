@@ -297,6 +297,15 @@ Chưa làm / để lại:
 - Không làm: engine copy riêng đa luồng (mất undo, hộp thoại xung đột và progress chuẩn của Shell). Copy nhiều file nhỏ qua Shell vẫn chậm hơn robocopy khoảng 3,5 lần.
 - NOT RUN: đo ở chế độ có UI (progress window của Shell); đo trên HDD/ổ mạng; đường hotkey (`EnumerateExplorerTabs` đọc selection của mọi tab) chưa đo và chưa sửa.
 
+## Đường phím tắt: đọc selection (03/10/2026)
+
+- Đo bằng `scripts\measure-hotkey-capture.ps1` (mở 3 cửa sổ Explorer trên fixture, chọn hết 2000 mục mỗi cửa sổ, đọc `captureMs` từ `--diagnose-explorer`).
+- Trước khi sửa: 50 ms (1 lần đo; không có selection lớn: 28 ms). Liệt kê toàn bộ tab với 15.000 mục đang chọn: 72 ms so với 10 ms khi gần như không chọn gì, tức khoảng 4 micro giây mỗi mục. Đường này vốn không chậm.
+- Sửa: `EnumerateExplorerTabs(onlyFrame)` chỉ trả về tab của cửa sổ foreground và chỉ đọc thư mục + selection của tab đang hiển thị. Điều kiện của cổng chọn tab trong `ExplorerSelectionSource` giữ nguyên.
+- Sau khi sửa: 26 ms và 27 ms (2 lần đo), trả đúng 2000 mục của cửa sổ đang focus. `test-tab-detection.ps1` PASS, 114/114 test pass.
+- `--diagnose-explorer` in thêm `captureMs`, `items` và `enumerateAllMs`.
+- Ghi nhận: phép đo phụ thuộc cửa sổ mới mở có nhận focus hay không; nhiều lần chạy bị từ chối vì focus không nằm trong file list (khi đó `captureMs=0`, không dùng được). `test-tab-detection.ps1` để lại 2 tab chưa đóng sau khi chạy trên build 26300; đã đóng tay, chưa sửa script.
+
 ## Giai đoạn 3 — Phát hành
 
 Kênh: Microsoft Store, WinGet, file tải trực tiếp từ GitHub. Cả ba dùng chung một gói MSIX đầy đủ; bản dev vẫn dùng sparse package.

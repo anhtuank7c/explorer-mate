@@ -22,7 +22,10 @@ struct ExplorerTab {
 };
 
 // Every open Explorer tab. The calling thread must be in a COM apartment.
-std::vector<ExplorerTab> EnumerateExplorerTabs();
+// With `onlyFrame`, only the tabs of that frame are returned, and folder and selection are
+// read for its shown tab alone: reading a selection costs time for every selected item, and
+// a keyboard shortcut only ever acts on that one tab.
+std::vector<ExplorerTab> EnumerateExplorerTabs(HWND onlyFrame = nullptr);
 
 // Keyboard focus of the foreground window, for deciding whether a hotkey belongs to the
 // file list or to a text field (rename box, address bar, search box).

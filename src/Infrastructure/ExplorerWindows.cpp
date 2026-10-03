@@ -69,12 +69,16 @@ void ReadSelection(IFolderView2* view, ExplorerTab& tab) {
 }
 
 // Fills `tab` from one IShellWindows entry. False when the entry is not an Explorer tab
-// (IShellWindows also lists legacy Internet Explorer windows).
-bool DescribeTab(IDispatch* entry, ExplorerTab& tab) {
+// (IShellWindows also lists legacy Internet Explorer windows) or belongs to another frame
+// than `onlyFrame`. With `onlyFrame`, folder and selection are read for its shown tab only.
+bool DescribeTab(IDispatch* entry, HWND onlyFrame, ExplorerTab& tab) {
     ComPtr<IWebBrowserApp> application;
     SHANDLE_PTR frame = 0;
     if (FAILED(entry->QueryInterface(IID_PPV_ARGS(&application))) ||
         FAILED(application->get_HWND(&frame))) {
+        return false;
+    }
+    if (onlyFrame != nullptr && reinterpret_cast<HWND>(frame) != onlyFrame) {
         return false;
     }
     ComPtr<IShellBrowser> browser;
@@ -91,6 +95,9 @@ bool DescribeTab(IDispatch* entry, ExplorerTab& tab) {
     tab.isActiveTab = tab.tabWindow != nullptr &&
                       FindWindowExW(tab.frame, nullptr, kTabWindowClass, nullptr) == tab.tabWindow;
 
+    if (onlyFrame != nullptr && !tab.isActiveTab) {
+        return true;
+    }
     ComPtr<IFolderView2> folderView;
     if (SUCCEEDED(shellView.As(&folderView))) {
         if (FAILED(folderView->ItemCount(SVGIO_ALLVIEW, &tab.itemsInView))) {
@@ -104,7 +111,7 @@ bool DescribeTab(IDispatch* entry, ExplorerTab& tab) {
 
 }  // namespace
 
-std::vector<ExplorerTab> EnumerateExplorerTabs() {
+std::vector<ExplorerTab> EnumerateExplorerTabs(HWND onlyFrame) {
     std::vector<ExplorerTab> tabs;
     ComPtr<IShellWindows> windows;
     long count = 0;
@@ -119,7 +126,7 @@ std::vector<ExplorerTab> EnumerateExplorerTabs() {
         position.lVal = index;
         ComPtr<IDispatch> entry;
         ExplorerTab tab;
-        if (windows->Item(position, &entry) == S_OK && entry && DescribeTab(entry.Get(), tab)) {
+        if (windows->Item(position, &entry) == S_OK && entry && DescribeTab(entry.Get(), onlyFrame, tab)) {
             tabs.push_back(std::move(tab));
         }
     }

@@ -58,7 +58,7 @@ domain::Result<std::vector<std::wstring>> ExplorerSelectionSource::CaptureFocuse
 
     const ExplorerTab* focusedTab = nullptr;
     size_t shownTabs = 0;
-    const std::vector<ExplorerTab> tabs = EnumerateExplorerTabs();
+    const std::vector<ExplorerTab> tabs = EnumerateExplorerTabs(foreground);
     for (const ExplorerTab& tab : tabs) {
         if (tab.frame == foreground && tab.isActiveTab) {
             ++shownTabs;
