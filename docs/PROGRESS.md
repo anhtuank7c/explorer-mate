@@ -304,7 +304,7 @@ Chưa làm / để lại:
 - Sửa: `EnumerateExplorerTabs(onlyFrame)` chỉ trả về tab của cửa sổ foreground và chỉ đọc thư mục + selection của tab đang hiển thị. Điều kiện của cổng chọn tab trong `ExplorerSelectionSource` giữ nguyên.
 - Sau khi sửa: 26 ms và 27 ms (2 lần đo), trả đúng 2000 mục của cửa sổ đang focus. `test-tab-detection.ps1` PASS, 114/114 test pass.
 - `--diagnose-explorer` in thêm `captureMs`, `items` và `enumerateAllMs`.
-- Ghi nhận: phép đo phụ thuộc cửa sổ mới mở có nhận focus hay không; nhiều lần chạy bị từ chối vì focus không nằm trong file list (khi đó `captureMs=0`, không dùng được). `test-tab-detection.ps1` để lại 2 tab chưa đóng sau khi chạy trên build 26300; đã đóng tay, chưa sửa script.
+- Ghi nhận: phép đo phụ thuộc cửa sổ mới mở có nhận focus hay không; nhiều lần chạy bị từ chối vì focus không nằm trong file list (khi đó `captureMs=0`, không dùng được). `test-tab-detection.ps1` để lại 2 tab chưa đóng sau khi chạy trên build 26300 vì `WM_CLOSE` chỉ đóng một tab mỗi lần; đã sửa: script gửi lặp lại cho tới khi cửa sổ test không còn tab nào (2 lần chạy: PASS, chỉ còn các cửa sổ của người dùng).
 
 ## Cửa sổ giới thiệu và changelog (03/10/2026)
 

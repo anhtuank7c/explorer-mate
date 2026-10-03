@@ -171,8 +171,19 @@ try {
 }
 finally {
     if (-not $KeepWindow -and $openedNewFrame) {
-        [void][ET.Native]::PostMessageW([IntPtr]$frame, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero)  # WM_CLOSE
-        Start-Sleep -Milliseconds 800
+        # WM_CLOSE on the frame closes only one tab on current Windows builds (seen on 26300:
+        # two of three tabs stayed open), so repeat until the frame has none left.
+        foreach ($attempt in 1..8) {
+            $remaining = @(Get-FrameTabs $frame).Count
+            if ($remaining -eq 0) { break }
+            [void][ET.Native]::PostMessageW([IntPtr]$frame, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero)  # WM_CLOSE
+            foreach ($wait in 1..15) {
+                Start-Sleep -Milliseconds 200
+                if (@(Get-FrameTabs $frame).Count -lt $remaining) { break }
+            }
+        }
+        $left = @(Get-FrameTabs $frame).Count
+        if ($left -gt 0) { Write-Host "WARNING: $left test tab(s) could not be closed; close the test window by hand." }
     }
     if ($root -like '*\ExplorerMate.Tests\tabs-*') { Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue }
 }
