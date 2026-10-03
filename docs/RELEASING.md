@@ -8,7 +8,7 @@ What is automated, what a person must do, and what is not set up yet.
 |---|---|---|
 | Microsoft Store | Microsoft, on submission | Product `9PB48F4K2G29` is created in Partner Center; not submitted yet. Its identity is in `packaging/store/identity.json` and `package-msix.ps1 -Store` builds the package to upload. |
 | WinGet | — | Available through the `msstore` source once the Store listing exists. A manifest in `winget-pkgs` needs the signed GitHub download. |
-| GitHub download | The maintainer's certificate | **No certificate yet.** A Store-signed package cannot be redistributed, so this channel needs its own trusted code-signing certificate. |
+| GitHub download | The maintainer's certificate | **No certificate yet.** A Store-signed package cannot be redistributed, so this channel needs its own trusted code-signing certificate; the application to SignPath Foundation is drafted in `docs/SIGNPATH.md`. Until then releases carry an unsigned zip for developers (below). |
 
 Until a package is signed by a certificate Windows trusts, it can only be registered with Developer Mode on, and Smart App Control may refuse to run the binaries.
 
@@ -37,6 +37,16 @@ To rehearse steps 4's build without tagging, run the Release workflow by hand ("
 - Never commit certificates or keys. `.gitignore` excludes `*.pfx` and `*.pvk`; GitHub secret scanning with push protection is enabled on the repository.
 - Options for an open-source project: SignPath Foundation (free, applies per project) or a low-cost open-source code-signing certificate. Neither has been applied for; their current terms were not checked.
 - When a certificate exists, signing belongs in the Release workflow with the key held in a hardware token or a cloud signing service — not as a file in repository secrets.
+
+## Developer zip
+
+Until there is a certificate, a release carries `ExplorerMate_<version>_x64_unsigned-dev.zip`: the files of the workflow's unsigned MSIX as a loose layout, with `Install.ps1`, `Uninstall.ps1` and a README from `packaging/devzip/`. It registers only with Developer Mode on and is labelled as not for general users.
+
+```powershell
+gh run download <release workflow run id> -n ExplorerMate-package-unsigned -D build\devzip\artifact
+scripts\package-devzip.ps1 -Msix build\devzip\artifact\package\ExplorerMate_<version>_x64.msix
+gh release upload v<version> build\package\ExplorerMate_<version>_x64_unsigned-dev.zip
+```
 
 ## Store submission
 

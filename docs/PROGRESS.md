@@ -341,6 +341,13 @@ Chưa làm / để lại:
 - Thêm `PRIVACY.md`, `packaging/store/listing.md` (mô tả, tính năng, từ khóa, giải trình `runFullTrust`, ghi chú cho người kiểm duyệt). CHANGELOG chuyển thành `[0.1.0] - 2026-10-04`.
 - NOT RUN: agent tự chạy khi đăng nhập Windows (cần đăng xuất/đăng nhập lại); Windows App Certification Kit; cài thử file `.msix` của Store (chưa ký nên không cài được trên máy thường); ảnh `01-context-menu.png` chưa có.
 
+## Phát hành 0.1.0 (04/10/2026)
+
+- Tag `v0.1.0` (commit `d7b54d9`), Release workflow pass, GitHub release đã publish. Người dùng đã bấm "Submit for certification" trên Partner Center (đang chờ duyệt). Các mục Store listing, Properties, Submission options, Notes for certification được điền qua trình duyệt theo `packaging/store/listing.md`.
+- Bản zip cho developer: `scripts/package-devzip.ps1` lấy MSIX chưa ký từ artifact của Release workflow, bung thành loose layout kèm `Install.ps1`/`Uninstall.ps1`/`README.txt` (`packaging/devzip/`). Đã cài thử trên máy dev thay cho bản đăng ký hiện tại (`explorermate --version` chạy được), rồi khôi phục bản cũ. Đã đính kèm vào release v0.1.0.
+- NOT RUN: `Uninstall.ps1` (sẽ xóa dữ liệu ứng dụng của bản đang dùng trên máy dev); cài zip trên máy khác.
+- Bản nháp đơn xin ký mã miễn phí của SignPath Foundation: `docs/SIGNPATH.md`. Người dùng cần tự nộp và bật xác thực hai lớp cho GitHub.
+
 ## Giai đoạn 3 — Phát hành
 
 Kênh: Microsoft Store, WinGet, file tải trực tiếp từ GitHub. Cả ba dùng chung một gói MSIX đầy đủ; bản dev vẫn dùng sparse package.
