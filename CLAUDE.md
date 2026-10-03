@@ -1,7 +1,6 @@
 # Explorer Mate (tên ngắn: ExMate)
 
-Tiện ích C++ native thêm ba lệnh vào menu chuột phải của File Explorer trên Windows 11: gom vào thư mục mới, đổi tên hàng loạt (postfix có index), nhân bản tại chỗ. Kế hoạch đầy đủ: `windows11-explorer-tools-claude-plan.md`. Tiến độ: `docs/PROGRESS.md`.
-
+Tiện ích C++ native thêm ba lệnh vào menu chuột phải của File Explorer trên Windows 11: gom vào thư mục mới, đổi tên hàng loạt (mask kiểu Total Commander), nhân bản tại chỗ; kèm phím tắt qua agent ở khay. Tiến độ và kế hoạch phát hành: `docs/PROGRESS.md`.
 ## Lệnh
 
 ```powershell

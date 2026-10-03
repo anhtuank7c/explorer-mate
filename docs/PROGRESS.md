@@ -220,7 +220,22 @@ NOT RUN:
 
 ## Giai đoạn 3 — Phát hành
 
-Kế hoạch ở mục 8b của file plan. Kênh: Store, WinGet, GitHub.
+Kênh: Microsoft Store, WinGet, file tải trực tiếp từ GitHub. Cả ba dùng chung một gói MSIX đầy đủ; bản dev vẫn dùng sparse package.
+
+| Kênh | Chữ ký | Điều kiện |
+|---|---|---|
+| Store | Store ký | Tài khoản Partner Center; đặt chỗ tên; Identity Name/Publisher lấy từ Partner Center |
+| WinGet | — | Có ngay qua nguồn `msstore` khi đã lên Store; manifest trong `winget-pkgs` cần bản GitHub đã ký |
+| GitHub | Chứng thư của tác giả | Gói do Store ký không phát hành lại được; cần chứng thư riêng (SignPath Foundation/Certum cho mã nguồn mở) |
+
+- [x] R1 — Gói MSIX đầy đủ
+- [ ] R2 — Sửa mã cho bản đóng gói: autostart qua startup task của package thay cho khóa Run; mở từ Start menu thì bật agent; kiểm tra thư mục dữ liệu nhất quán giữa DLL, worker và agent khi cài từ `.msix` thật
+- [ ] R3 — Nội dung phát hành: icon thật, số phiên bản, chính sách quyền riêng tư, mô tả và ảnh chụp cho Store (tác giả và giấy phép MIT đã xong)
+- [ ] R4 — Thử cài `.msix` đã ký trên máy không bật Developer Mode
+- [ ] R5 — Nộp Store, rồi xác nhận `winget install` từ nguồn `msstore`
+- [ ] R6 — GitHub Releases bằng chứng thư riêng, CI build + ký; nộp manifest vào `winget-pkgs`
+
+File kế hoạch gốc đã bị xóa khỏi repo và khỏi lịch sử git theo yêu cầu người dùng (03/10/2026); các mục "file plan" nhắc ở phần lịch sử phía trên không còn tra cứu được.
 
 ### R1 — Gói MSIX đầy đủ (03/10/2026)
 
