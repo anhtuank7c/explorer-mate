@@ -12,10 +12,14 @@ BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID) {
     return TRUE;
 }
 
+// The annotations repeat the SDK's declarations (combaseapi.h) so static analysis sees one
+// consistent contract.
+__control_entrypoint(DllExport)
 STDAPI DllCanUnloadNow() {
     return Module<InProc>::GetModule().Terminate() ? S_OK : S_FALSE;
 }
 
-STDAPI DllGetClassObject(REFCLSID classId, REFIID interfaceId, LPVOID* object) {
+_Check_return_
+STDAPI DllGetClassObject(_In_ REFCLSID classId, _In_ REFIID interfaceId, _Outptr_ LPVOID* object) {
     return Module<InProc>::GetModule().GetClassObject(classId, interfaceId, object);
 }

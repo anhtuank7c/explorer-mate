@@ -1,5 +1,7 @@
 #include "Domain/ProductInfo.h"
 
+#include "Domain/Version.h"
+
 namespace et::domain {
 
 std::wstring_view ProductName() {
@@ -10,8 +12,11 @@ std::wstring_view ProductShortName() {
     return L"ExplorerMate";
 }
 
+#define ET_WIDEN_LITERAL(text) L##text
+#define ET_WIDEN(text) ET_WIDEN_LITERAL(text)
+
 std::wstring_view ProductVersion() {
-    return L"0.1.0";
+    return ET_WIDEN(ET_VERSION_STRING);
 }
 
 std::wstring_view ProductAuthor() {

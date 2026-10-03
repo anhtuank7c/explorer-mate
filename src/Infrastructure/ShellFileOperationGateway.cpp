@@ -121,14 +121,19 @@ public:
 
 private:
     // Returning a failure from a Post* callback cancels every operation still pending,
-    // which is how dependent rename steps are stopped after the first failure.
+    // which is how dependent rename steps are stopped after the first step that did not
+    // complete. "Did not complete" includes success codes without a resulting item, such as
+    // the user choosing Skip at a conflict prompt: a later step may have been planned on the
+    // assumption that this one vacated its name.
     HRESULT Record(IShellItem* item, HRESULT result, IShellItem* created) {
         try {
             completed_.push_back({FileSystemPath(item), FileSystemPath(created), result});
         } catch (...) {
             return E_OUTOFMEMORY;
         }
-        return (stopAfterFirstFailure_ && FAILED(result)) ? E_ABORT : S_OK;
+        const bool completed = SUCCEEDED(result) && result != COPYENGINE_S_USER_IGNORED &&
+                               created != nullptr;
+        return (stopAfterFirstFailure_ && !completed) ? E_ABORT : S_OK;
     }
 
     bool stopAfterFirstFailure_;

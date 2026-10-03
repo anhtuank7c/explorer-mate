@@ -7,10 +7,8 @@
 
 #include "App/CommandLine.h"
 #include "Domain/PathText.h"
-#include "Infrastructure/AppDataPaths.h"
 #include "Infrastructure/ExplorerSelectionSource.h"
 #include "Infrastructure/ExplorerWindows.h"
-#include "Infrastructure/FileLogger.h"
 
 namespace et::ui {
 
@@ -88,23 +86,18 @@ std::wstring DescribeMoment() {
 }  // namespace
 
 void WatchExplorer(unsigned seconds) {
-    const auto dataDirectory = infra::ProductDataDirectory();
-    infra::FileLogger log(dataDirectory.ok() ? dataDirectory.value() + L"\\logs\\tab-watch.log"
-                                             : std::wstring(L"tab-watch.log"));
-    log.Write(app::LogLevel::Info, L"--- watch started for " + std::to_wstring(seconds) + L" s ---");
-
+    // Output goes to stdout only. It contains folder paths and selected file names, which
+    // must not be left behind in a log file; the person running it decides where it goes.
     std::wstring previous;
     const ULONGLONG end = GetTickCount64() + static_cast<ULONGLONG>(seconds) * 1000;
     while (GetTickCount64() < end) {
         std::wstring current = DescribeMoment();
         if (current != previous) {
-            log.Write(app::LogLevel::Info, current);
             WriteLineToStdout(current);
             previous = std::move(current);
         }
         Sleep(200);
     }
-    log.Write(app::LogLevel::Info, L"--- watch ended ---");
 }
 
 void PrintExplorerDiagnostics(unsigned delaySeconds) {

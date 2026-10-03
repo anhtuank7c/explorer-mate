@@ -7,7 +7,8 @@
 namespace et::infra {
 
 // Appends UTF-8 lines to one file. The file is opened per write so several processes
-// (shell host, worker) can share it. Logging failures are swallowed by design.
+// (shell host, worker) can share it. Logging failures are swallowed by design. Each message
+// becomes exactly one line, and the file is rotated to "<name>.old" at about 1 MB.
 class FileLogger final : public app::ILogger {
 public:
     explicit FileLogger(std::wstring filePath);

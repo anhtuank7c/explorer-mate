@@ -23,4 +23,10 @@ public:
     bool installed() const;
 };
 
+// True when the modifier keys physically held right now are exactly the chord's modifiers.
+// Used to confirm a chord matched from tracked events: Windows does not deliver key-ups to
+// the hook while a secure desktop or an elevated window has the input, so the tracked state
+// can claim a modifier is still down long after it was released.
+bool PhysicalModifiersMatch(const domain::KeyChord& chord);
+
 }  // namespace et::infra

@@ -294,17 +294,20 @@ sequenceDiagram
     Hook->>Matcher: OnKey(event, contextAccepts)
     Note over Matcher: tracks modifiers itself, never swallows them,<br/>ignores injected keys, AltGr is not Alt
     opt chord matches exactly
-        Matcher->>Source: FocusIsInFileList()
+        Matcher->>Hook: confirm(chord)
+        Note over Hook: the physical modifier keys must equal the chord,<br/>otherwise the tracked state is stale and is reset
+        Hook->>Source: FocusIsInFileList()
         Note over Source: cheap window queries only.<br/>Foreground is CabinetWClass and focus is<br/>DirectUIHWND directly under SHELLDLL_DefView
-        Source-->>Matcher: yes or no
+        Source-->>Hook: yes or no
+        Hook-->>Matcher: accept or veto
     end
     alt no match, wrong focus, shortcuts off, or a worker is running
         Matcher-->>Hook: pass through
         Hook-->>User: key reaches the application unchanged
     else match in a file list
         Matcher-->>Hook: swallow + action
-        Hook->>Agent: PostMessage(hotkey, action)
-        Note over Hook,Agent: the hook returns at once.<br/>COM work happens on the message loop
+        Hook->>Agent: remember the action, PostMessage(wake-up)
+        Note over Hook,Agent: the hook returns at once. COM work happens on the message loop.<br/>The message carries no action, so posting it from outside does nothing
         Agent->>Source: CaptureFocusedSelection()
         Source->>Explorer: IShellWindows, every tab's frame, tab window, view, selection
         Note over Source: exactly one tab of the foreground frame is shown,<br/>its view owns the focus, the folder is a real folder.<br/>Otherwise refuse
@@ -400,6 +403,10 @@ The two packages register the same commands, so the install scripts refuse to re
 
 ## 8. Known weak points
 
-- The agent's window accepts its internal "shortcut pressed" message from any process of the same user. What it acts on is still only the selection of the focused tab.
+- A program running as the same user can do anything the user can, including driving Explorer Mate's command line. The agent does not add to that: its internal "shortcut pressed" message carries no action (the action is kept in the agent after a real key press), so posting it from outside does nothing.
+- The tracked modifier state can go stale behind a UAC prompt or an elevated window. A matched chord is therefore confirmed against the physical keyboard state (`PhysicalModifiersMatch`) before it is accepted.
+- If a rename batch that needed a temporary name (a cycle) fails half-way, one file is left named `~explorermate-N.tmp`. The report lists the failed step, but does not yet say which original name that file had.
+- Junctions inside a folder being duplicated are followed by the shell's copy engine; only the selected items themselves are checked for links.
+- `BringToFront` attaches to the foreground thread's input queue for a moment; if that thread is hung, the worker's dialog waits with it.
 - In a full MSIX install the autostart Run key will be virtualised; a package startup task is needed.
 - Data-folder consistency between DLL, worker and agent has been checked for the sparse package and a loosely registered full package, not for a signed `.msix` install.

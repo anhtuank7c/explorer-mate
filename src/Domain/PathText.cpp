@@ -11,6 +11,24 @@ bool IsAsciiLetter(wchar_t character) {
     return (character >= L'a' && character <= L'z') || (character >= L'A' && character <= L'Z');
 }
 
+// One path component as it must look for the text of a path to mean exactly one item:
+// Windows silently normalises "." / "..", trailing dots and spaces, so two different texts
+// could name the same file, and ':' would address an alternate data stream.
+bool IsPlainComponent(std::wstring_view component) {
+    if (component.empty() || component == L"." || component == L"..") {
+        return false;
+    }
+    if (component.back() == L'.' || component.back() == L' ') {
+        return false;
+    }
+    for (const wchar_t character : component) {
+        if (character < 0x20 || character == L':' || character == L'/') {
+            return false;
+        }
+    }
+    return true;
+}
+
 }  // namespace
 
 bool IsDriveAbsoluteItemPath(std::wstring_view path) {
@@ -18,10 +36,17 @@ bool IsDriveAbsoluteItemPath(std::wstring_view path) {
         path[2] != kSeparator) {
         return false;
     }
-    if (path.back() == kSeparator || path.find(L'/') != std::wstring_view::npos) {
-        return false;
+    std::wstring_view rest = path.substr(kDriveRootLength);
+    while (true) {
+        const size_t separator = rest.find(kSeparator);
+        if (!IsPlainComponent(rest.substr(0, separator))) {
+            return false;  // Also catches empty components and a trailing separator.
+        }
+        if (separator == std::wstring_view::npos) {
+            return true;
+        }
+        rest.remove_prefix(separator + 1);
     }
-    return path.find(L"\\\\", kDriveRootLength - 1) == std::wstring_view::npos;
 }
 
 std::wstring_view ParentOf(std::wstring_view path) {

@@ -106,6 +106,11 @@ int Run(const std::vector<std::wstring>& arguments) {
     const auto request = LoadRequest(options.value());
     if (!request.ok()) {
         et::ui::WriteLineToStdout(request.error().message);
+        // Started from the menu or a shortcut there is no console: without this the user
+        // would click a command and see nothing happen.
+        if (options.value().requestFile && !options.value().silent) {
+            et::ui::ShowProblem(request.error().message);
+        }
         return kExitUsage;
     }
 
@@ -146,6 +151,12 @@ int Run(const std::vector<std::wstring>& arguments) {
 
 }  // namespace
 
-int APIENTRY wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
-    return Run(et::ui::ReadProcessArguments());
+int APIENTRY wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ PWSTR, _In_ int) {
+    // Last line of defence: an escaped exception (out of memory, a filesystem error) must
+    // end the process with an error code, not with a crash dialog.
+    try {
+        return Run(et::ui::ReadProcessArguments());
+    } catch (...) {
+        return kExitFailed;
+    }
 }

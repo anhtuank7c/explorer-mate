@@ -33,9 +33,9 @@ foreach ($package in $packages) {
 
 if (Test-Path (Join-Path $stageDir 'AppxManifest.xml')) {
     try {
-        Remove-Item $stageDir -Recurse -Force
+        Remove-BuildFolder $stageDir
         Write-Host "Deleted $stageDir"
     } catch {
-        Write-Host "Could not delete $stageDir (a file is still loaded). It is safe to delete after File Explorer restarts."
+        Write-Host "Could not delete $stageDir ($($_.Exception.Message)). If a file is still loaded, it is safe to delete after File Explorer restarts."
     }
 }

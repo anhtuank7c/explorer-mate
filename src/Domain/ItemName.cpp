@@ -9,10 +9,14 @@ namespace {
 
 constexpr size_t kMaxNameLength = 255;
 constexpr std::wstring_view kForbiddenCharacters = L"<>:\"/\\|?*";
-constexpr std::array<std::wstring_view, 22> kReservedDeviceNames{
-    L"CON",  L"PRN",  L"AUX",  L"NUL",  L"COM1", L"COM2", L"COM3", L"COM4",
-    L"COM5", L"COM6", L"COM7", L"COM8", L"COM9", L"LPT1", L"LPT2", L"LPT3",
-    L"LPT4", L"LPT5", L"LPT6", L"LPT7", L"LPT8", L"LPT9"};
+// COM/LPT also exist with digit 0 and with the superscript digits 1 to 3.
+constexpr std::array<std::wstring_view, 32> kReservedDeviceNames{
+    L"CON",      L"PRN",      L"AUX",      L"NUL",      L"CONIN$",   L"CONOUT$",
+    L"COM0",     L"COM1",     L"COM2",     L"COM3",     L"COM4",     L"COM5",
+    L"COM6",     L"COM7",     L"COM8",     L"COM9",     L"COM¹", L"COM²",
+    L"COM³", L"LPT0",     L"LPT1",     L"LPT2",     L"LPT3",     L"LPT4",
+    L"LPT5",     L"LPT6",     L"LPT7",     L"LPT8",     L"LPT9",     L"LPT¹",
+    L"LPT²", L"LPT³"};
 
 Error InvalidName(const wchar_t* reason) {
     return Error(ErrorCode::InvalidName, reason);

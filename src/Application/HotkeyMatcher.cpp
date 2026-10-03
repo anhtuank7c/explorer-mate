@@ -49,10 +49,10 @@ void HotkeyMatcher::Reset() {
     swallowedKey_.reset();
 }
 
-std::optional<ActionKind> HotkeyMatcher::MatchChord(unsigned key) const {
+const HotkeyBinding* HotkeyMatcher::MatchChord(unsigned key) const {
     const auto held = [&](unsigned modifier) { return heldModifiers_.count(modifier) != 0; };
     if (held(kRightAlt)) {
-        return std::nullopt;
+        return nullptr;
     }
     domain::KeyChord pressed;
     pressed.ctrl = held(kLeftControl) || held(kRightControl) || held(kControl);
@@ -63,14 +63,13 @@ std::optional<ActionKind> HotkeyMatcher::MatchChord(unsigned key) const {
 
     for (const HotkeyBinding& binding : bindings_) {
         if (binding.chord == pressed) {
-            return binding.action;
+            return &binding;
         }
     }
-    return std::nullopt;
+    return nullptr;
 }
 
-KeyDecision HotkeyMatcher::OnKey(const KeyEvent& event,
-                                 const std::function<bool()>& contextAccepts) {
+KeyDecision HotkeyMatcher::OnKey(const KeyEvent& event, const ContextCheck& contextAccepts) {
     if (event.isInjected) {
         return {};
     }
@@ -94,12 +93,12 @@ KeyDecision HotkeyMatcher::OnKey(const KeyEvent& event,
     if (swallowedKey_ == event.virtualKey) {
         return {true, std::nullopt};  // Auto-repeat while the shortcut is held.
     }
-    const auto action = MatchChord(event.virtualKey);
-    if (!action || !contextAccepts()) {
+    const HotkeyBinding* binding = MatchChord(event.virtualKey);
+    if (binding == nullptr || !contextAccepts(binding->chord)) {
         return {};
     }
     swallowedKey_ = event.virtualKey;
-    return {true, action};
+    return {true, binding->action};
 }
 
 }  // namespace et::app

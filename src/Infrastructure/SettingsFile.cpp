@@ -27,6 +27,12 @@ domain::Result<app::Settings> SettingsFile::Load() const {
     if (!fs::exists(path_, error)) {
         return app::Settings::Defaults();
     }
+    // A genuine settings file is a few short lines; refuse to load anything else into memory.
+    constexpr uintmax_t kMaxBytes = 64 * 1024;
+    const uintmax_t size = fs::file_size(path_, error);
+    if (error || size > kMaxBytes) {
+        return FileError(path_ + L" is unreadable or too large to be a settings file.");
+    }
     std::ifstream file(fs::path(path_), std::ios::binary);
     if (!file) {
         return FileError(L"Cannot read " + path_);

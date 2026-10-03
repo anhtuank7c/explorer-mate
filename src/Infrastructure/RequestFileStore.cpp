@@ -32,7 +32,9 @@ std::wstring NewFileName() {
         return {};
     }
     wchar_t text[64]{};
-    StringFromGUID2(guid, text, static_cast<int>(std::size(text)));
+    if (StringFromGUID2(guid, text, static_cast<int>(std::size(text))) == 0) {
+        return {};
+    }
     std::wstring name(text);
     // "{...}" -> "..." so the name needs no quoting anywhere.
     return name.substr(1, name.size() - 2) + kExtension;
@@ -63,10 +65,15 @@ domain::Result<std::wstring> RequestFileStore::Put(const app::ActionRequest& req
         return StoreError(L"Cannot prepare the request folder: " + directory_);
     }
 
+    // Exact encoding only: a replaced character would make the worker act on another file.
+    const auto bytes = ToUtf8Exact(app::SerializeRequest(request));
+    if (!bytes) {
+        return domain::Error(domain::ErrorCode::UnsupportedLocation,
+                             L"A selected item has a name that cannot be passed on safely.");
+    }
     const fs::path path = fs::path(directory_) / name;
-    const std::string bytes = ToUtf8(app::SerializeRequest(request));
     std::ofstream file(path, std::ios::binary | std::ios::trunc);
-    file.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+    file.write(bytes->data(), static_cast<std::streamsize>(bytes->size()));
     file.close();
     if (!file) {
         fs::remove(path, error);
@@ -108,15 +115,18 @@ domain::Result<app::ActionRequest> RequestFileStore::Take(const std::wstring& pa
 }
 
 void RequestFileStore::RemoveStale(unsigned maxAgeSeconds) const {
+    // Best-effort housekeeping: every call uses the error_code overloads so nothing throws.
     std::error_code error;
     const auto now = fs::file_time_type::clock::now();
-    for (const fs::directory_entry& entry : fs::directory_iterator(directory_, error)) {
-        if (entry.path().extension() != kExtension) {
+    for (fs::directory_iterator entry(directory_, error), end; !error && entry != end;
+         entry.increment(error)) {
+        if (entry->path().extension() != kExtension) {
             continue;
         }
-        const auto written = entry.last_write_time(error);
-        if (!error && now - written > std::chrono::seconds(maxAgeSeconds)) {
-            fs::remove(entry.path(), error);
+        std::error_code entryError;
+        const auto written = entry->last_write_time(entryError);
+        if (!entryError && now - written > std::chrono::seconds(maxAgeSeconds)) {
+            fs::remove(entry->path(), entryError);
         }
     }
 }

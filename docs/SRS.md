@@ -99,6 +99,9 @@ flowchart LR
 | FR-C6 | Cancelling a dialog changes nothing and shows no error. | `GroupIntoNewFolderTests`, `BulkRenameTests` |
 | FR-C7 | When a batch ends incomplete, the user is told which items failed or were skipped and why. Items never attempted are counted. | manual; `ReportPresenter` |
 | FR-C8 | The outcome of each item is reported separately as succeeded, failed, skipped or not attempted. | `ShellGatewayTests` |
+| FR-C9 | A path is accepted only if its text names exactly one item: no `.` or `..` components, no trailing dot or space, no control characters, no `:` (alternate data streams). | `PathTextTests` |
+| FR-C10 | At most 5,000 items per command; more is refused with a message. | design |
+| FR-C11 | A command that cannot start (unsupported location, too many items, unreadable request) tells the user why instead of silently doing nothing. | design |
 
 ### 3.2 New folder with selection
 
@@ -157,6 +160,8 @@ flowchart LR
 | FR-K6 | Modifier keys are never swallowed; the matching key-up of a swallowed key is swallowed too. | `HotkeyMatcherTests` |
 | FR-K7 | Key presses synthesised by other software are ignored. | `HotkeyMatcherTests` |
 | FR-K8 | While a worker started by a shortcut is still running, further shortcuts are not intercepted. | design |
+| FR-K9 | Before a shortcut fires, its modifiers are confirmed against the physical keyboard state; if the tracked state disagrees (key-ups missed behind a UAC prompt or an elevated window) the key passes through and the tracked state is reset. | `HotkeyMatcherTests` (veto path); physical check manual |
+| FR-K10 | Only a real key press can start a command through the agent: messages posted to the agent by other programs carry no action. | design |
 
 ### 3.7 Tray agent and settings
 
@@ -195,6 +200,9 @@ flowchart LR
 | NFR-S3 | **Untrusted input.** A request file is accepted only from the product's request folder, with the expected extension, bounded size, valid UTF-8 and the expected format; its contents are validated again against the file system. | `RequestFileStoreTests`, `ActionRequestTests` |
 | NFR-S4 | **No command shell.** Item paths are never passed through `cmd.exe` or PowerShell, nor placed on a command line by the shell extension or agent. | design |
 | NFR-S5 | **Fail closed.** When the focused tab, the focus or the key state is uncertain, a shortcut does nothing. | `HotkeyMatcherTests`, `scripts/test-tab-detection.ps1` |
+| NFR-S6 | **Exact hand-over.** A path that cannot be encoded without loss (an unpaired surrogate) is refused rather than replaced. | `RequestFileStoreTests` |
+| NFR-S7 | **Hardened binaries.** Release binaries have ASLR, DEP, stack protection, Control Flow Guard, CET compatibility and load their imports from System32 only. | `scripts/check-binaries.ps1` (BinSkim) in CI |
+| NFR-S8 | **Static analysis.** MSVC code analysis and CodeQL run on every change with no open findings. | CI |
 | NFR-P1 | **Menu responsiveness.** Menu callbacks return without disk scans. | design |
 | NFR-P2 | **Keyboard latency.** The keyboard hook does only in-memory work and a few window queries. | design |
 | NFR-P3 | **Large selections.** Selection size is not limited by command-line length. | design |
@@ -216,7 +224,7 @@ flowchart LR
 | File operations | `IFileOperation` with a progress sink; `CreateDirectoryW` / `RemoveDirectoryW` for the group folder. |
 | Request file | `%LOCALAPPDATA%\ExplorerMate\requests\<guid>.etreq`, UTF-8 lines: `ExplorerMate-Request 1`, `action=<name>`, `item=<path>`… |
 | Settings file | `%LOCALAPPDATA%\ExplorerMate\settings.txt`, UTF-8 lines: `ExplorerMate-Settings 1`, `hotkeys=on\|off`, `<action>=<chord>\|none`. |
-| Logs | `shell.log`, `agent.log`, `tab-watch.log` under `%LOCALAPPDATA%\ExplorerMate\logs`. |
+| Logs | `shell.log` and `agent.log` under `%LOCALAPPDATA%\ExplorerMate\logs`; one line per entry, rotated at about 1 MB. They contain no file names and no keystrokes. |
 | Autostart | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, value `ExplorerMate`. |
 
 ## 6. Known gaps

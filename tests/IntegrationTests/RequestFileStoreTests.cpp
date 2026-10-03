@@ -34,6 +34,20 @@ public:
         Assert::IsFalse(fs::exists(path.value()));
     }
 
+    // NTFS allows an unpaired surrogate in a name. Encoding it with a replacement character
+    // would hand the worker the name of a different file, so the request must be refused.
+    TEST_METHOD(PutRefusesNamesThatCannotBeEncodedExactly) {
+        const TempFixture fixture;
+        const fs::path directory = fixture.root() / L"requests";
+        const infra::RequestFileStore store(directory.wstring());
+        const std::wstring loneSurrogate = std::wstring(L"D:\\Work\\a") + wchar_t{0xD800} + L".txt";
+
+        const auto path = store.Put({app::ActionKind::DuplicateInPlace, {loneSurrogate}});
+
+        Assert::IsFalse(path.ok());
+        Assert::IsTrue(!fs::exists(directory) || fs::is_empty(directory));
+    }
+
     TEST_METHOD(RefusesFilesOutsideTheStoreFolder) {
         const TempFixture fixture;
         const infra::RequestFileStore store((fixture.root() / L"requests").wstring());

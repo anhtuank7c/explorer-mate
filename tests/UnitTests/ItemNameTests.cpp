@@ -53,7 +53,9 @@ public:
     }
 
     TEST_METHOD(RejectsReservedDeviceNames) {
-        for (const wchar_t* name : {L"CON", L"nul", L"Com1", L"LPT9", L"NUL.txt", L"aux.tar.gz"}) {
+        for (const wchar_t* name : {L"CON", L"nul", L"Com1", L"LPT9", L"NUL.txt", L"aux.tar.gz",
+                                    L"COM0", L"lpt0", L"CONIN$", L"conout$", L"COM¹",
+                                    L"LPT³.txt"}) {
             Assert::IsTrue(domain::ValidateItemName(name).has_value(), name);
         }
         Assert::IsFalse(domain::ValidateItemName(L"CONSOLE").has_value());
@@ -91,9 +93,25 @@ public:
         Assert::IsTrue(domain::IsDriveAbsoluteItemPath(L"c:\\Users\\me\\file"));
         for (const wchar_t* path : {L"", L"D:\\", L"D:", L"\\\\server\\share\\a.txt", L"a.txt",
                                     L"D:/a.txt", L"D:\\Work\\", L"D:\\Work\\\\a.txt",
-                                    L"::{645FF040-5081-101B-9F08-00AA002F954E}"}) {
+                                    L"::{645FF040-5081-101B-9F08-00AA002F954E}",
+                                    L"\\\\?\\D:\\a.txt"}) {
             Assert::IsFalse(domain::IsDriveAbsoluteItemPath(path), path);
         }
+    }
+
+    // Texts that Windows would silently normalise to another item, or that address something
+    // other than a plain file: two such texts could name the same file.
+    TEST_METHOD(RejectsPathsThatDoNotNameExactlyOneItem) {
+        for (const wchar_t* path : {L"D:\\Work\\..", L"D:\\Work\\..\\a.txt", L"D:\\Work\\.\\a.txt",
+                                    L"D:\\Work\\a.txt.", L"D:\\Work\\a.txt ", L"D:\\Work.\\a.txt",
+                                    L"D:\\Work\\a.txt:stream", L"D:\\Work\\a.txt::$DATA",
+                                    L"D:\\Work\\a\tb.txt", L"D:\\Work\\a\nb.txt"}) {
+            Assert::IsFalse(domain::IsDriveAbsoluteItemPath(path), path);
+        }
+        const std::wstring withNul = std::wstring(L"D:\\Work\\a") + L'\0' + L"b.txt";
+        Assert::IsFalse(domain::IsDriveAbsoluteItemPath(withNul));
+        Assert::IsTrue(domain::IsDriveAbsoluteItemPath(L"D:\\Work\\.gitignore"));
+        Assert::IsTrue(domain::IsDriveAbsoluteItemPath(L"D:\\Work\\v1.2\\a b.txt"));
     }
 };
 

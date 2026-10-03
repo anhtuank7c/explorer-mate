@@ -127,7 +127,11 @@ Dependencies point inward only: `App`/`ShellExtension` → `Infrastructure` → 
 | Drive a dialog without a person | `& .\scripts\probe-dialog.ps1 -Action group\|rename -Path <items> [-SetText @{<id>='text'}] [-Press ok]` |
 | Check tab and focus detection | `scripts\test-tab-detection.ps1` (opens and closes its own Explorer window) |
 | See what a shortcut would act on right now | `ExplorerMate.exe --diagnose-explorer \| Out-String` |
-| Build the release-style MSIX | `scripts\package-msix.ps1` (unsigned unless you pass a certificate) |
+| Static analysis (MSVC `/analyze`, findings are errors) | `scripts\build.ps1 -Configuration Debug -Analyze` |
+| Check exploit mitigations in the binaries (BinSkim) | `scripts\check-binaries.ps1` (downloads BinSkim into `build\tools` on first use) |
+| Build the release-style MSIX | `scripts\package-msix.ps1` (unsigned unless you pass `-CertificateThumbprint`) |
+
+CI on GitHub runs the build, the tests, MSVC analysis, CodeQL and BinSkim on every push and pull request (`.github/workflows`). How a release is cut is in [`docs/RELEASING.md`](docs/RELEASING.md); how to report a vulnerability is in [`SECURITY.md`](SECURITY.md); user-visible changes go in [`CHANGELOG.md`](CHANGELOG.md).
 
 The EXE is a GUI-subsystem program: in PowerShell, pipe it (`| Out-String`) to wait for it and see its output.
 
@@ -306,7 +310,11 @@ Phụ thuộc chỉ đi vào trong: `App`/`ShellExtension` → `Infrastructure` 
 | Điều khiển dialog không cần người bấm | `& .\scripts\probe-dialog.ps1 -Action group\|rename -Path <items> [-SetText @{<id>='text'}] [-Press ok]` |
 | Kiểm tra nhận diện tab và focus | `scripts\test-tab-detection.ps1` (tự mở và đóng một cửa sổ Explorer riêng) |
 | Xem phím tắt lúc này sẽ tác động lên gì | `ExplorerMate.exe --diagnose-explorer \| Out-String` |
-| Dựng gói MSIX kiểu phát hành | `scripts\package-msix.ps1` (chưa ký, trừ khi truyền chứng thư) |
+| Phân tích tĩnh (MSVC `/analyze`, mọi phát hiện đều là lỗi) | `scripts\build.ps1 -Configuration Debug -Analyze` |
+| Kiểm tra các biện pháp chống khai thác trong file nhị phân (BinSkim) | `scripts\check-binaries.ps1` (tự tải BinSkim vào `build\tools` ở lần chạy đầu) |
+| Dựng gói MSIX kiểu phát hành | `scripts\package-msix.ps1` (chưa ký, trừ khi truyền `-CertificateThumbprint`) |
+
+CI trên GitHub chạy build, test, phân tích MSVC, CodeQL và BinSkim cho mỗi lần push và pull request (`.github/workflows`). Quy trình phát hành nằm ở [`docs/RELEASING.md`](docs/RELEASING.md); cách báo lỗ hổng bảo mật ở [`SECURITY.md`](SECURITY.md); thay đổi người dùng nhìn thấy được ghi vào [`CHANGELOG.md`](CHANGELOG.md).
 
 EXE là chương trình GUI-subsystem: trong PowerShell phải đưa vào pipeline (`| Out-String`) thì mới chờ nó chạy xong và thấy output.
 

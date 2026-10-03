@@ -47,4 +47,28 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
+  <!-- Exploit mitigations for what ships (checked by BinSkim in CI):
+       /guard:cf            Control Flow Guard: indirect calls may only reach valid targets.
+       /CETCOMPAT           marks the image compatible with hardware shadow stacks.
+       /DEPENDENTLOADFLAG   import DLLs are only searched in System32, so a DLL planted next
+                            to the binary or on the search path is never loaded. Not applied
+                            to the test DLLs: they import the test framework from Visual Studio.
+       ASLR, DEP and /GS are on by default and left alone. -->
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release'">
+    <ClCompile>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release' and ('$(MSBuildProjectName)' == 'App' or '$(MSBuildProjectName)' == 'ShellExtension')">
+    <Link>
+      <CETCompat>true</CETCompat>
+      <AdditionalOptions>/guard:cf %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- In every configuration: install-dev.ps1 can register Debug binaries into DllHost too. -->
+  <ItemDefinitionGroup Condition="'$(MSBuildProjectName)' == 'App' or '$(MSBuildProjectName)' == 'ShellExtension'">
+    <Link>
+      <AdditionalOptions>/DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
 </Project>

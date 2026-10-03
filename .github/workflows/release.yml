@@ -1,0 +1,85 @@
+name: Release
+
+# Builds the release package from a version tag (vX.Y.Z) and opens a DRAFT GitHub release.
+# Nothing is published automatically: a person reviews the draft, signs or submits the
+# package (see docs/RELEASING.md) and publishes.
+#
+# "Run workflow" (workflow_dispatch) does a dry run on any branch: same build and package,
+# uploaded as a workflow artifact only, no release.
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Build, verify and package
+    runs-on: windows-2025-vs2026
+    permissions:
+      contents: write        # create the draft release (tag builds only)
+      id-token: write        # sign the build-provenance attestation
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Check the tag matches the version in the source
+        if: github.ref_type == 'tag'
+        shell: powershell
+        run: |
+          . .\scripts\Common.ps1
+          $expected = 'v' + (Get-ProductVersion)
+          if ($env:GITHUB_REF_NAME -ne $expected) {
+            throw "Tag $env:GITHUB_REF_NAME does not match src/Domain/Version.h ($expected)."
+          }
+
+      - name: Build (with version resources)
+        shell: powershell
+        run: .\scripts\build.ps1 -Configuration Release -EmbedVersionInfo
+
+      - name: Tests
+        shell: powershell
+        run: .\scripts\test.ps1 -Configuration Release -NoBuild
+
+      - name: Check exploit mitigations (BinSkim)
+        shell: powershell
+        run: .\scripts\check-binaries.ps1 -Configuration Release
+
+      # Unsigned on purpose. The Store signs on submission; a GitHub download must be signed
+      # with the maintainer's certificate, which is not available to this workflow yet.
+      - name: Package (unsigned MSIX)
+        shell: powershell
+        run: |
+          .\scripts\package-msix.ps1 -Configuration Release
+          $msix = Get-ChildItem build\package -Filter *.msix | Select-Object -First 1
+          $hash = (Get-FileHash $msix.FullName -Algorithm SHA256).Hash.ToLower()
+          "$hash  $($msix.Name)" | Set-Content build\package\SHA256SUMS.txt -Encoding ascii
+          "MSIX_PATH=build/package/$($msix.Name)" | Add-Content $env:GITHUB_ENV
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: ${{ env.MSIX_PATH }}
+
+      - name: Upload package and symbols
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ExplorerMate-package-unsigned
+          path: |
+            build/package/*.msix
+            build/package/SHA256SUMS.txt
+            build/x64/Release/ExplorerMate.pdb
+            build/x64/Release/ExplorerMate.Shell.pdb
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Create draft release
+        if: github.ref_type == 'tag'
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME --draft --verify-tag --title "Explorer Mate $env:GITHUB_REF_NAME" --notes "Draft created by the release workflow. The attached package is UNSIGNED: sign it or submit it to the Store before publishing. See docs/RELEASING.md and CHANGELOG.md." build/package/SHA256SUMS.txt

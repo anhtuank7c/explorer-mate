@@ -18,8 +18,8 @@ constexpr unsigned kRightControl = 0xA3;
 constexpr unsigned kLeftAlt = 0xA4;
 constexpr unsigned kRightAlt = 0xA5;
 
-const auto kAlways = [] { return true; };
-const auto kNever = [] { return false; };
+const auto kAlways = [](const domain::KeyChord&) { return true; };
+const auto kNever = [](const domain::KeyChord&) { return false; };
 
 app::KeyEvent Down(unsigned key) { return {key, true, false}; }
 app::KeyEvent Up(unsigned key) { return {key, false, false}; }
@@ -206,6 +206,22 @@ public:
         HoldCtrlAlt(matcher);
         matcher.Reset();
         Assert::IsFalse(matcher.OnKey(Down('N'), kAlways).swallow);
+    }
+
+    // The caller compares the matched chord with the real keyboard state; a mismatch (a
+    // modifier whose key-up was missed behind a UAC prompt) must let the key through.
+    TEST_METHOD(ContextCheckReceivesTheMatchedChordAndCanVeto) {
+        app::HotkeyMatcher matcher = DefaultMatcher();
+        HoldCtrlAlt(matcher);
+        domain::KeyChord seen;
+        const auto veto = [&](const domain::KeyChord& chord) {
+            seen = chord;
+            return false;
+        };
+        const auto decision = matcher.OnKey(Down('D'), veto);
+        Assert::IsFalse(decision.swallow);
+        Assert::IsFalse(decision.triggered.has_value());
+        Assert::AreEqual(std::wstring(L"Ctrl+Alt+D"), domain::FormatKeyChord(seen));
     }
 
     TEST_METHOD(UnboundActionHasNoShortcut) {

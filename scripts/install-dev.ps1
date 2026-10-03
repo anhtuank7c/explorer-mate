@@ -60,7 +60,11 @@ try {
 } catch {
     throw "Cannot replace files in $stageDir ($($_.Exception.Message)). The shell extension is probably still loaded: restart File Explorer yourself (Task Manager > Windows Explorer > Restart), then run this script again."
 }
-Copy-Item (Join-Path $RepoRoot 'packaging\AppxManifest.xml') $stageDir -Force
+# The manifest's version follows the single source in src\Domain\Version.h.
+$manifest = [IO.File]::ReadAllText((Join-Path $RepoRoot 'packaging\AppxManifest.xml'))
+$versioned = [regex]::Replace($manifest, '(<Identity\b[^>]*?\bVersion=")[^"]*(")', "`${1}$(Get-ProductVersion).0`${2}")
+if ($versioned -notmatch ('Version="' + [regex]::Escape((Get-ProductVersion)) + '\.0"')) { throw 'Could not set the package version in the manifest.' }
+[IO.File]::WriteAllText((Join-Path $stageDir 'AppxManifest.xml'), $versioned, (New-Object Text.UTF8Encoding $false))
 Copy-Item (Join-Path $RepoRoot 'packaging\Assets') $stageDir -Recurse -Force
 
 Add-AppxPackage -Register (Join-Path $stageDir 'AppxManifest.xml') -ExternalLocation $stageDir

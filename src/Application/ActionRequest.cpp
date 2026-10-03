@@ -12,7 +12,9 @@ namespace {
 constexpr std::wstring_view kHeader = L"ExplorerMate-Request 1";
 constexpr std::wstring_view kActionKey = L"action=";
 constexpr std::wstring_view kItemKey = L"item=";
-constexpr size_t kMaxItems = 100000;
+// The duplicate check and rename planning compare items pairwise; beyond this the worker
+// would appear to hang. Far above any selection made by hand.
+constexpr size_t kMaxItems = 5000;
 
 domain::Error Malformed(const wchar_t* reason) {
     return domain::Error(domain::ErrorCode::InvalidArgument,
@@ -69,10 +71,16 @@ domain::Result<ActionRequest> ParseRequest(std::wstring_view text) {
         } else if (StartsWith(line, kItemKey)) {
             const std::wstring_view path = line.substr(kItemKey.size());
             if (!domain::IsDriveAbsoluteItemPath(path)) {
-                return Malformed(L"an item is not an absolute local path.");
+                // The common real cause is a network or virtual location; say so plainly,
+                // because this message is shown to the user.
+                return domain::Error(domain::ErrorCode::UnsupportedLocation,
+                                     L"Only items in a regular folder on a local drive are "
+                                     L"supported. This one is not: " + std::wstring(path));
             }
             if (items.size() == kMaxItems) {
-                return Malformed(L"too many items.");
+                return domain::Error(domain::ErrorCode::InvalidArgument,
+                                     L"Too many items are selected. The limit is " +
+                                         std::to_wstring(kMaxItems) + L".");
             }
             items.emplace_back(path);
         } else {

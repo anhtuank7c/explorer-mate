@@ -34,19 +34,26 @@ struct KeyDecision {
 //  - Auto-repeat of the shortcut key is swallowed without triggering again, and the matching
 //    key-up is swallowed too so the application never sees half a keystroke.
 //  - Injected events are ignored.
+//
+// The tracked modifier state can go stale: key-ups are not delivered while a secure desktop
+// or an elevated window has the input (UAC prompt, Ctrl+Alt+Del, Ctrl+Shift+Esc). The
+// matcher cannot see that, so the caller is handed the matched chord and must confirm it
+// against the real keyboard state before accepting, and call Reset() when they disagree.
 class HotkeyMatcher {
 public:
+    // Asked only when a chord matches. Receives that chord; returns whether the shortcut may
+    // fire here and now. Runs inside the hook and must be fast.
+    using ContextCheck = std::function<bool(const domain::KeyChord&)>;
+
     explicit HotkeyMatcher(std::vector<HotkeyBinding> bindings);
 
-    // `contextAccepts` is asked only when a chord matches: is the keyboard focus somewhere
-    // the shortcut applies? It runs inside the hook and must be fast.
-    KeyDecision OnKey(const KeyEvent& event, const std::function<bool()>& contextAccepts);
+    KeyDecision OnKey(const KeyEvent& event, const ContextCheck& contextAccepts);
 
     // Forgets held keys, e.g. after the session was locked and key-ups were missed.
     void Reset();
 
 private:
-    std::optional<ActionKind> MatchChord(unsigned key) const;
+    const HotkeyBinding* MatchChord(unsigned key) const;
 
     std::vector<HotkeyBinding> bindings_;
     std::set<unsigned> heldModifiers_;

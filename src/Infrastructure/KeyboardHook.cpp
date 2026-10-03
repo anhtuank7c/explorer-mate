@@ -58,4 +58,10 @@ bool KeyboardHook::installed() const {
     return g_hook != nullptr;
 }
 
+bool PhysicalModifiersMatch(const domain::KeyChord& chord) {
+    const auto down = [](int key) { return (GetAsyncKeyState(key) & 0x8000) != 0; };
+    return down(VK_CONTROL) == chord.ctrl && down(VK_MENU) == chord.alt &&
+           down(VK_SHIFT) == chord.shift && (down(VK_LWIN) || down(VK_RWIN)) == chord.win;
+}
+
 }  // namespace et::infra

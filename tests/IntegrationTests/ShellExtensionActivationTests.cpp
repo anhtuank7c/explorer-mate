@@ -52,7 +52,7 @@ std::wstring TitleOf(const CLSID& classId) {
         return {};
     }
     PWSTR raw = nullptr;
-    if (FAILED(command->GetTitle(nullptr, &raw))) {
+    if (FAILED(command->GetTitle(nullptr, &raw)) || raw == nullptr) {
         return {};
     }
     std::wstring title(raw);

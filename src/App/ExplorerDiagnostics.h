@@ -8,9 +8,8 @@ namespace et::ui {
 void PrintExplorerDiagnostics(unsigned delaySeconds);
 
 // Records, for `seconds`, one line every time the foreground window, the keyboard focus, the
-// active tab or its selection changes. Lines go to stdout and to
-// %LOCALAPPDATA%\ExplorerMate\logs\tab-watch.log so a person can click through a scenario
-// and the result can be read afterwards.
+// active tab or its selection changes, so a person can click through a scenario. Lines go
+// to stdout only: they contain file names and are not kept in a log file.
 void WatchExplorer(unsigned seconds);
 
 }  // namespace et::ui

@@ -104,24 +104,53 @@ private:
     // --- Keyboard ------------------------------------------------------------------------
     // Runs inside the low-level hook: must stay fast and must not touch COM.
     bool OnKey(const app::KeyEvent& event) {
-        const app::KeyDecision decision = matcher_->OnKey(event, [this] { return CanAct(); });
+        bool staleModifiers = false;
+        const app::KeyDecision decision =
+            matcher_->OnKey(event, [&](const domain::KeyChord& chord) {
+                // The matcher's modifier state comes from events and misses key-ups that
+                // happened behind a UAC prompt or an elevated window. Never act on it alone.
+                if (!infra::PhysicalModifiersMatch(chord)) {
+                    staleModifiers = true;
+                    return false;
+                }
+                return CanAct();
+            });
+        if (staleModifiers) {
+            matcher_->Reset();
+        }
         if (decision.triggered) {
-            PostMessageW(window_, kHotkeyMessage, static_cast<WPARAM>(*decision.triggered), 0);
+            // The action stays in this process. The posted message is only a wake-up, so
+            // another program posting it cannot make the agent act: there is nothing pending.
+            pendingAction_ = decision.triggered;
+            PostMessageW(window_, kHotkeyMessage, 0, 0);
         }
         return decision.swallow;
+    }
+
+    bool ShortcutsAllowed() const {
+        return settings_.hotkeysEnabled && !editingSettings_ && !handlingHotkey_ &&
+               !worker_.IsRunning();
     }
 
     // One command at a time: while a worker (and its dialog) is alive, shortcuts are not
     // intercepted at all and reach Explorer as ordinary keys.
     bool CanAct() const {
-        return settings_.hotkeysEnabled && !editingSettings_ && !worker_.IsRunning() &&
-               selection_.FocusIsInFileList();
+        return ShortcutsAllowed() && selection_.FocusIsInFileList();
     }
 
-    void OnHotkey(app::ActionKind action) {
-        if (worker_.IsRunning()) {
+    void OnHotkeyMessage() {
+        const std::optional<app::ActionKind> action = std::exchange(pendingAction_, std::nullopt);
+        if (!action || !ShortcutsAllowed()) {
             return;
         }
+        // Reading the selection makes cross-process COM calls, which pump messages: without
+        // this flag a second wake-up could re-enter here before the worker is recorded.
+        handlingHotkey_ = true;
+        StartWorkerForFocusedSelection(*action);
+        handlingHotkey_ = false;
+    }
+
+    void StartWorkerForFocusedSelection(app::ActionKind action) {
         auto paths = selection_.CaptureFocusedSelection();
         if (!paths.ok()) {
             // Refusing is the safe outcome; an empty selection is not worth a log line.
@@ -271,7 +300,7 @@ private:
         }
         switch (message) {
             case kHotkeyMessage:
-                OnHotkey(static_cast<app::ActionKind>(wParam));
+                OnHotkeyMessage();
                 return 0;
             case kTrayMessage:
                 if (LOWORD(lParam) == WM_RBUTTONUP || LOWORD(lParam) == WM_LBUTTONUP) {
@@ -302,6 +331,8 @@ private:
     infra::WorkerProcess worker_;
     HWND window_ = nullptr;
     UINT taskbarCreated_ = 0;
+    std::optional<app::ActionKind> pendingAction_;  // Set by the hook, consumed by the wake-up.
+    bool handlingHotkey_ = false;
     bool editingSettings_ = false;
     bool showingAbout_ = false;
 };
@@ -331,7 +362,15 @@ int RunAgent() {
         if (instance != nullptr) {
             CloseHandle(instance);
         }
-        return 0;  // Another agent already serves this session.
+        // Normally another agent already serves this session. If its window is missing,
+        // something else holds the name and shortcuts will not work: leave a trace.
+        if (FindWindowW(kWindowClass, nullptr) == nullptr) {
+            infra::FileLogger(DataPath(L"\\logs\\agent.log"))
+                .Write(app::LogLevel::Error,
+                       L"Agent not started: the single-instance name is taken but no agent "
+                       L"window exists.");
+        }
+        return 0;
     }
     const int exitCode = Agent().Run();
     ReleaseMutex(instance);
