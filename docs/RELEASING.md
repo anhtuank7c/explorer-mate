@@ -55,6 +55,18 @@ Not done yet for a Store build: "Start with Windows" must use the package startu
 
 The icon is drawn in two SVG masters under `packaging/icon/` (the full drawing, and a simplified one for 16-24 px). `scripts\build-icons.ps1` renders them with headless Microsoft Edge into `src/App/ExplorerMate.ico`, the package logos in `packaging/Assets/` (including the size-specific "unplated" variants picked up through `resources.pri`) and `packaging/store/StoreLogo-300.png` for the Store listing. The generated files are committed; run the script again only after editing an SVG.
 
+## Store screenshots
+
+`scripts\capture-store-screenshots.ps1` creates a demo folder with harmless sample files (`build\store-demo\Da Lat 2026`), opens each dialog on them, captures it, cancels it (nothing is renamed or moved) and places the capture on a 1920x1080 canvas with a caption. The results are in `packaging/store/screenshots/`:
+
+| File | Shows |
+|---|---|
+| `02-bulk-rename.png` | The Bulk rename dialog with a mask and the preview |
+| `03-new-folder.png` | The New folder with selection dialog |
+| `04-about.png` | The introduction window |
+
+The context menu and the tray menu only appear on a real click, so those are captured by hand: open the demo folder, select the photos, right-click, and capture with Win+Shift+S. `01-context-menu.png` is reserved for that capture.
+
 ## After publishing
 
 - Confirm `winget install` finds the Store listing.
