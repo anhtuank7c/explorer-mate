@@ -228,6 +228,38 @@ NOT RUN:
 - Bằng chứng: 107/107 test pass (Debug + Release); package loose `ExplorerMate_0.1.0.0_x64__jn0ge0denfdd8` đăng ký; Duplicate qua COM tạo `a - Copy.txt`; agent chạy với tên tiến trình `ExplorerMate.exe`; dữ liệu ở `%LOCALAPPDATA%\ExplorerMate`.
 - Còn lại của tên cũ trên máy: không còn gì: hai thư mục log cũ trong `%LOCALAPPDATA%` đã được xóa theo yêu cầu người dùng.
 
+## Review cấu trúc, môi trường, bảo mật và quy trình phát hành (03/10/2026)
+
+Nguồn phát hiện: một lượt review bảo mật độc lập (không phải người viết mã), MSVC `/analyze`, BinSkim, và tự rà cấu trúc/môi trường/quy trình. Không có lỗi mức nghiêm trọng hay cao.
+
+Đã sửa:
+
+- **Phím tắt nhầm sau UAC (trung bình):** trạng thái modifier theo dõi từ event có thể "kẹt" khi key-up xảy ra sau hộp thoại UAC/cửa sổ elevated; giờ chord khớp phải được đối chiếu với trạng thái bàn phím thật (`PhysicalModifiersMatch`), lệch thì bỏ qua và reset.
+- **Mật khẩu chứng thư trên dòng lệnh (trung bình):** `package-msix.ps1` ký bằng thumbprint từ certificate store, có timestamp; không còn tham số mật khẩu.
+- Thông điệp nội bộ của agent không còn mang action; handler kiểm tra lại các điều kiện và có cờ chống re-entrancy. Xóa `test-agent-hotkey.ps1` vì nó dựa vào lỗ hổng này.
+- Đường dẫn nguồn bị từ chối nếu có `.`/`..`, dấu chấm/khoảng trắng cuối, ký tự điều khiển, `:`; thêm tên thiết bị reserved còn thiếu.
+- Request file chỉ nhận UTF-8 chính xác (surrogate lẻ bị từ chối); giới hạn 5.000 item.
+- Worker báo lỗi khi request bị từ chối trên đường menu (trước đây im lặng); `wWinMain` có catch-all; dọn request cũ không ném exception.
+- Lô đổi tên dừng ở bất kỳ bước nào không hoàn tất (kể cả người dùng chọn Skip).
+- Log: mỗi mục một dòng, xoay vòng ở 1 MB; `--watch` không còn ghi tên file ra log; settings file giới hạn 64 KB.
+- Đóng gói từ thư mục staging sạch; xóa thư mục qua `Remove-BuildFolder` (chỉ trong `build\`, từ chối nếu có junction).
+- Build: Control Flow Guard, CET, `/DEPENDENTLOADFLAG:0x800`; 5 cảnh báo `/analyze` đã sửa.
+- Một nguồn phiên bản duy nhất `src/Domain/Version.h` cho mã, resource, manifest, script.
+- Thêm `.gitattributes`, `.editorconfig`, `.vsconfig`, `SECURITY.md`, `CHANGELOG.md`, mẫu pull request, Dependabot, `docs/RELEASING.md`.
+- CI (`ci.yml`, `codeql.yml`) và quy trình phát hành (`release.yml`).
+
+Bằng chứng: 113/113 test pass (máy dev và CI, Debug + Release); CI xanh ngay lần đầu; CodeQL 0 cảnh báo; BinSkim 0 lỗi; chạy thử `release.yml` thủ công tạo được gói MSIX, checksum và attestation, không tạo release. Bản cài trên máy dev đã cập nhật bằng bản đã sửa; lệnh Duplicate qua COM vẫn chạy.
+
+Chưa làm / để lại:
+
+- Phím thật sau khi sửa agent: chưa ai bấm thử lại.
+- BA2024 (Spectre) cần cài thêm thư viện spectre-mitigated; BA2027 (SourceLink): chấp nhận.
+- So khớp O(n²) trong `Selection`/`RenamePlan` vẫn còn, chỉ chặn bằng giới hạn 5.000 item; preview chưa debounce.
+- File tạm `~explorermate-N.tmp` khi lô đổi tên có vòng bị lỗi giữa chừng: báo cáo chưa nêu tên gốc.
+- Junction bên trong thư mục được duplicate vẫn do Shell xử lý.
+- Cài đặt repo cần chủ repo bật: private vulnerability reporting (để `SECURITY.md` đúng), branch protection cho `main`, Dependabot alerts.
+- Chưa có chứng thư ký; bước ký trong `release.yml` chưa tồn tại.
+
 ## Giai đoạn 3 — Phát hành
 
 Kênh: Microsoft Store, WinGet, file tải trực tiếp từ GitHub. Cả ba dùng chung một gói MSIX đầy đủ; bản dev vẫn dùng sparse package.

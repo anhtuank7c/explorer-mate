@@ -6,7 +6,9 @@ Trạng thái: **PASS** (đã chạy, đạt), **FAIL**, **NOT RUN** (chưa ch�
 
 ## Tự động
 
-Chạy bằng `scripts\test.ps1` trên cả Debug và Release: 107/107 PASS (thêm 18 unit test cho `KeyChord`, `Settings`, `HotkeyMatcher`; các số theo nhóm bên dưới chưa cộng 18 test này).
+Chạy bằng `scripts\test.ps1` trên cả Debug và Release: 113/113 PASS, cả trên máy dev lẫn trên CI của GitHub (runner `windows-2025-vs2026`). Các số theo nhóm bên dưới là của đợt đầu (89 test); sau đó thêm 18 test cho `KeyChord`, `Settings`, `HotkeyMatcher` và 6 test từ đợt review bảo mật (đường dẫn, phiên bản, veto phím tắt, mã hóa request, logger).
+
+Quét tự động trên CI cho mỗi lần push: MSVC `/analyze` (0 phát hiện), CodeQL bộ `security-extended` (0 cảnh báo), BinSkim (0 lỗi; 2 cảnh báo được chấp nhận trên mỗi file: BA2024 Spectre, BA2027 SourceLink).
 
 | Nhóm | Phạm vi | Số test |
 |---|---|---|
@@ -39,7 +41,7 @@ Chạy bằng `scripts\test.ps1` trên cả Debug và Release: 107/107 PASS (th�
 | Focus ở thanh địa chỉ / ô tìm kiếm / khung điều hướng → từ chối | — | NOT RUN |
 | Đổi tab đúng lúc bấm phím | — | NOT RUN |
 | Agent: khởi động, single instance, `--stop-agent` | lệnh trực tiếp | PASS |
-| Agent nhận "đã bấm Duplicate" khi file list focus → tạo bản sao; khi đang đổi tên → không làm gì | `test-agent-hotkey.ps1` | NOT RUN (3 lần đều SKIPPED: không đưa được cửa sổ thử lên foreground) |
+| Sau đợt review bảo mật: agent chỉ hành động khi có phím thật (thông điệp từ tiến trình khác không mang action); đối chiếu modifier với trạng thái bàn phím thật | — | NOT RUN bằng phím thật sau khi sửa (logic veto có unit test). Script `test-agent-hotkey.ps1` đã bị xóa vì nó dựa đúng vào lỗ hổng vừa được vá |
 | Bấm phím thật Ctrl+Alt+N / R / D trong file list | người dùng | PASS (03/10/2026: "it all works"; các dòng "người dùng" còn lại trong bảng này được yêu cầu thử cùng lúc nhưng không được xác nhận riêng từng dòng) |
 | Phím tắt trong ứng dụng khác, ô tìm kiếm, thanh địa chỉ không bị chặn | người dùng | NOT RUN |
 | Giữ phím (auto-repeat), nhả phím, AltGr | unit test `HotkeyMatcherTests` | PASS (logic); phím thật NOT RUN |
