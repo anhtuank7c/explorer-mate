@@ -12,7 +12,14 @@ A small companion for the Windows 11 File Explorer. It adds three commands that 
 
 Explorer Mate is not a file manager and does not replace Explorer. You keep Explorer, its tabs and everything you are used to; you just get a few more things to do with a selection.
 
-> **Status: early development build.** It works on the author's machine (Windows 11, x64) and is not yet published. Installing currently requires Windows Developer Mode. Releases through the Microsoft Store, WinGet and GitHub are planned.
+## Install
+
+- **Microsoft Store:** [Explorer Mate](https://apps.microsoft.com/detail/9PB48F4K2G29)
+- **WinGet:** `winget install 9PB48F4K2G29 --source msstore`
+
+After installing, open Explorer Mate from the Start menu once: that starts the tray agent for the keyboard shortcuts. To uninstall, use Settings > Apps > Installed apps.
+
+> **Status: version 0.1.0, the first release.** Windows 11 on x64 only. A signed download from GitHub is not available yet; the [release page](https://github.com/anhtuank7c/explorer-mate/releases) carries an unsigned build for developers.
 
 ## Why
 
@@ -226,7 +233,14 @@ Một người bạn đồng hành nhỏ cho File Explorer trên Windows 11. Cô
 
 Explorer Mate không phải trình quản lý file và không thay thế Explorer. Bạn vẫn dùng Explorer, các tab và mọi thứ quen thuộc; chỉ có thêm vài việc làm được với những gì đang chọn.
 
-> **Trạng thái: bản phát triển, còn sớm.** Công cụ chạy được trên máy của tác giả (Windows 11, x64) và chưa phát hành chính thức. Hiện việc cài đặt cần bật Developer Mode của Windows. Kế hoạch là phát hành qua Microsoft Store, WinGet và GitHub.
+## Cài đặt
+
+- **Microsoft Store:** [Explorer Mate](https://apps.microsoft.com/detail/9PB48F4K2G29)
+- **WinGet:** `winget install 9PB48F4K2G29 --source msstore`
+
+Cài xong, hãy mở Explorer Mate từ Start menu một lần để bật agent ở khay cho các phím tắt. Muốn gỡ, vào Settings > Apps > Installed apps.
+
+> **Trạng thái: phiên bản 0.1.0, bản phát hành đầu tiên.** Chỉ hỗ trợ Windows 11 x64. Chưa có bản tải đã ký trên GitHub; [trang release](https://github.com/anhtuank7c/explorer-mate/releases) chỉ có bản chưa ký dành cho developer.
 
 ## Vì sao có công cụ này
 

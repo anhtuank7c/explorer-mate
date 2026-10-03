@@ -6,7 +6,7 @@ What is automated, what a person must do, and what is not set up yet.
 
 | Channel | Who signs | Status |
 |---|---|---|
-| Microsoft Store | Microsoft, on submission | Product `9PB48F4K2G29` is created in Partner Center; not submitted yet. Its identity is in `packaging/store/identity.json` and `package-msix.ps1 -Store` builds the package to upload. |
+| Microsoft Store | Microsoft, on submission | Product `9PB48F4K2G29`: version 0.1.0 passed certification on 4 October 2026 and is published. Its identity is in `packaging/store/identity.json` and `package-msix.ps1 -Store` builds the package to upload. |
 | WinGet | — | Available through the `msstore` source once the Store listing exists. A manifest in `winget-pkgs` needs the signed GitHub download. |
 | GitHub download | The maintainer's certificate | **No certificate yet.** A Store-signed package cannot be redistributed, so this channel needs its own trusted code-signing certificate; the application to SignPath Foundation is drafted in `docs/SIGNPATH.md`. Until then releases carry an unsigned zip for developers (below). |
 
