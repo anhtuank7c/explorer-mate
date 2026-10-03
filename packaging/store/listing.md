@@ -41,7 +41,7 @@ PRIVATE BY DESIGN
 No network access, no telemetry, no account. Explorer Mate is open source under the MIT license.
 
 LIMITS
-Windows 11 on x64. Items on local drives; online-only cloud files, links and junctions are not supported.
+Windows 11 on x64. Items on local drives; online-only cloud files, links and junctions are not supported. Windows on ARM is not tested.
 
 ## What's new in this version
 
@@ -61,6 +61,11 @@ First release.
 ## Search terms (up to 7)
 
 bulk rename, batch rename, file explorer, context menu, duplicate file, new folder with selection, file manager
+
+## Additional information
+
+- **Copyright and trademark info:** Copyright (c) 2026 Tuan Nguyen. MIT License.
+- **Developed by:** Tuan Nguyen (anhtuank7c)
 
 ## Screenshots
 
