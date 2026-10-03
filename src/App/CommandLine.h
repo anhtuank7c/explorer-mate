@@ -5,6 +5,9 @@
 
 namespace et::ui {
 
+// Full path of the running executable.
+std::wstring ReadProcessPath();
+
 // Arguments of the current process, excluding the executable path.
 std::vector<std::wstring> ReadProcessArguments();
 

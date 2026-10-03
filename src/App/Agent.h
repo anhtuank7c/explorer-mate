@@ -13,4 +13,7 @@ int RunAgent();
 // menu, and waits briefly for it. Returns false when no agent is running.
 bool StopRunningAgent();
 
+// Starts the agent as a separate process unless one is already running in this session.
+void EnsureAgentRunning();
+
 }  // namespace et::ui

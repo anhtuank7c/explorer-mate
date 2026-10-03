@@ -7,11 +7,13 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
   xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
   xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
-  IgnorableNamespaces="uap uap5 rescap desktop4 desktop5 com">
+  IgnorableNamespaces="uap uap5 uap10 rescap desktop desktop4 desktop5 com">
   <Identity
     Name="@@IDENTITY_NAME@@"
     Publisher="@@PUBLISHER@@"
@@ -49,6 +51,11 @@
             <uap5:ExecutionAlias Alias="explorermate.exe" />
           </uap5:AppExecutionAlias>
         </uap5:Extension>
+        <!-- "Start with Windows": off until the user turns it on from the tray menu. The TaskId
+             must match src/Infrastructure/Autostart.cpp. -->
+        <desktop:Extension Category="windows.startupTask" Executable="ExplorerMate.exe" EntryPoint="Windows.FullTrustApplication" uap10:Parameters="--agent">
+          <desktop:StartupTask TaskId="ExplorerMateAgent" Enabled="false" DisplayName="Explorer Mate" />
+        </desktop:Extension>
         <desktop4:Extension Category="windows.fileExplorerContextMenus">
           <desktop4:FileExplorerContextMenus>
             <!-- CLSIDs must match src/ShellExtension/Commands.cpp. -->

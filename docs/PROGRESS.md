@@ -333,6 +333,14 @@ Chưa làm / để lại:
 
 - Sau đó theo yêu cầu người dùng: `--about`, `--changelog`, `--licenses` không mở cửa sổ nữa mà in nội dung ra terminal. Cửa sổ giới thiệu chỉ mở khi chạy không tham số (Start menu) hoặc từ menu khay; `capture-store-screenshots.ps1` chụp About bằng cách chạy không tham số.
 
+## Chuẩn bị nộp Microsoft Store (03/10/2026)
+
+- Người dùng đã tạo sản phẩm `9PB48F4K2G29` trong Partner Center. Đã đọc trang Product identity: Name `NguynAnhTun.ExplorerMate`, Publisher `CN=3F67D73A-54CC-42CC-BCE5-D8D6C26620E2`; lưu ở `packaging/store/identity.json`. `package-msix.ps1 -Store` đóng gói với identity này.
+- Lỗi chặn phát hành đã sửa: (1) bản cài từ gói không có cách nào bật agent - nay mở Explorer Mate từ Start menu sẽ chạy agent rồi hiện About; (2) "Start with Windows" ghi vào Run key, mà ghi registry của ứng dụng đóng gói bị ảo hóa nên không có tác dụng - nay dùng startup task của gói (`windows.startupTask`, `uap10:Parameters="--agent"`, mặc định tắt) qua WinRT `StartupTask`; bản không đóng gói vẫn dùng Run key.
+- Thêm `--autostart on|off|status`. Đã thử qua alias trên bản loose: off -> on -> off, trạng thái đọc lại đúng. Mở EXE không tham số khi agent đã dừng: có tiến trình `--agent` mới và cửa sổ About.
+- Thêm `PRIVACY.md`, `packaging/store/listing.md` (mô tả, tính năng, từ khóa, giải trình `runFullTrust`, ghi chú cho người kiểm duyệt). CHANGELOG chuyển thành `[0.1.0] - 2026-10-04`.
+- NOT RUN: agent tự chạy khi đăng nhập Windows (cần đăng xuất/đăng nhập lại); Windows App Certification Kit; cài thử file `.msix` của Store (chưa ký nên không cài được trên máy thường); ảnh `01-context-menu.png` chưa có.
+
 ## Giai đoạn 3 — Phát hành
 
 Kênh: Microsoft Store, WinGet, file tải trực tiếp từ GitHub. Cả ba dùng chung một gói MSIX đầy đủ; bản dev vẫn dùng sparse package.

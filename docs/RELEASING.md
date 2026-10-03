@@ -6,7 +6,7 @@ What is automated, what a person must do, and what is not set up yet.
 
 | Channel | Who signs | Status |
 |---|---|---|
-| Microsoft Store | Microsoft, on submission | Not submitted yet. Needs a Partner Center account and the reserved name; the package identity it assigns goes into `package-msix.ps1 -IdentityName / -Publisher`. |
+| Microsoft Store | Microsoft, on submission | Product `9PB48F4K2G29` is created in Partner Center; not submitted yet. Its identity is in `packaging/store/identity.json` and `package-msix.ps1 -Store` builds the package to upload. |
 | WinGet | — | Available through the `msstore` source once the Store listing exists. A manifest in `winget-pkgs` needs the signed GitHub download. |
 | GitHub download | The maintainer's certificate | **No certificate yet.** A Store-signed package cannot be redistributed, so this channel needs its own trusted code-signing certificate. |
 
@@ -40,16 +40,23 @@ To rehearse steps 4's build without tagging, run the Release workflow by hand ("
 
 ## Store submission
 
-1. In Partner Center, reserve "Explorer Mate" and note the package identity name and publisher.
-2. Build the package with those values:
-   ```powershell
-   scripts\package-msix.ps1 -IdentityName <name> -Publisher "<CN=...>" -PublisherDisplayName "<publisher>"
-   ```
-3. Upload the unsigned `.msix`; the Store signs it.
-4. The listing needs a privacy policy. The facts for it: no network access, no telemetry, logs stay on the device, the keyboard hook only recognises the configured shortcuts and records nothing.
-5. The `runFullTrust` capability must be justified: the app is a classic desktop program that performs file operations through the Windows shell and installs a keyboard hook for its shortcuts.
+The product is `9PB48F4K2G29` ("Explorer Mate") in Partner Center. The identity it assigned (Product management > Product identity) is recorded in `packaging/store/identity.json`; these values are public, they are part of every installed copy.
 
-Not done yet for a Store build: "Start with Windows" must use the package startup-task mechanism instead of the Run registry key.
+1. Build the package to upload:
+   ```powershell
+   scripts\build.ps1 -Configuration Release -EmbedVersionInfo
+   scripts\test.ps1 -Configuration Release -NoBuild
+   scripts\package-msix.ps1 -Store
+   ```
+   Output: `build\package\ExplorerMate_<version>_x64_Store.msix`, unsigned; the Store signs it.
+2. In Partner Center start a submission and fill in each section. The text is in `packaging/store/listing.md`: description, features, search terms, the `runFullTrust` justification and the notes for certification. The privacy policy is `PRIVACY.md`, linked by its GitHub URL.
+3. Packages: upload the `.msix`. Store listings: paste the text, upload `packaging/store/StoreLogo-300.png` and the screenshots.
+4. Pricing: free. Age ratings: answer the questionnaire (no user content, no communication, no purchases).
+5. Submit. Certification of a first submission with a restricted capability usually takes a few days.
+
+"Start with Windows" in a packaged install uses the package's startup task (`windows.startupTask` in the release manifest, off by default); the Run registry key is only used by unpackaged development builds, because a packaged program's registry writes are private to the package.
+
+Not verified before a first submission: the Windows App Certification Kit has not been run on the package, and the startup task has only been turned on and off, not observed starting the agent at sign-in.
 
 ## Icons
 

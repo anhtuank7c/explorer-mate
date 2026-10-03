@@ -24,7 +24,7 @@ bool IsOption(const std::wstring& argument) {
 
 // Options that are followed by a value.
 bool TakesValue(const std::wstring& option) {
-    for (const wchar_t* known : {L"--request", L"--action", L"--name", L"--delay", L"--watch",
+    for (const wchar_t* known : {L"--request", L"--action", L"--autostart", L"--name", L"--delay", L"--watch",
                                  L"--mask", L"--ext-mask", L"--search", L"--replace", L"--start",
                                  L"--step", L"--digits"}) {
         if (option == known) {
@@ -105,6 +105,11 @@ domain::Result<Options> ParseOptions(const std::vector<std::wstring>& arguments)
                 return action.error();
             }
             options.action = action.value();
+        } else if (argument == L"--autostart") {
+            if (value != L"on" && value != L"off" && value != L"status") {
+                return UsageError(L"--autostart takes on, off or status.");
+            }
+            options.autostart = value;
         } else if (argument == L"--name") {
             options.folderName = value;
         } else if (argument == L"--delay") {
@@ -141,7 +146,7 @@ domain::Result<Options> ParseOptions(const std::vector<std::wstring>& arguments)
         }
     }
 
-    if (options.showHelp || options.showVersion || options.showIntroduction || options.showAbout || options.showChangelog || options.showLicenses ||
+    if (options.showHelp || options.showVersion || options.autostart || options.showIntroduction || options.showAbout || options.showChangelog || options.showLicenses ||
         options.diagnoseExplorer || options.runAgent ||
         options.stopAgent) {
         return options;
@@ -188,6 +193,7 @@ std::wstring UsageText() {
            L"  --licenses      print the license and the third-party notices\n"
            L"  --agent         start the tray agent (keyboard shortcuts)\n"
            L"  --stop-agent    stop the tray agent\n"
+           L"  --autostart <on|off|status>   start the tray agent when you sign in to Windows\n"
            L"  --diagnose-explorer [--delay <seconds>] [--watch <seconds>]\n"
            L"                  print open File Explorer tabs, focus and selections\n"
            L"\n"

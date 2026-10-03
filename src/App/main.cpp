@@ -15,6 +15,7 @@
 #include "App/ReportPresenter.h"
 #include "Domain/ProductInfo.h"
 #include "Infrastructure/AppDataPaths.h"
+#include "Infrastructure/Autostart.h"
 #include "Infrastructure/ComApartment.h"
 #include "Infrastructure/RequestFileStore.h"
 
@@ -105,12 +106,30 @@ int Run(const std::vector<std::wstring>& arguments) {
         return kExitOk;
     }
     if (options.value().showIntroduction) {
+        // Opening the program from the Start menu is how an installed copy gets its tray
+        // icon and keyboard shortcuts for the first time.
+        et::ui::EnsureAgentRunning();
         et::ui::ShowAbout();
         return kExitOk;
     }
     if (options.value().stopAgent) {
         et::ui::WriteLineToStdout(et::ui::StopRunningAgent() ? L"Agent stopped."
                                                              : L"No agent is running.");
+        return kExitOk;
+    }
+    if (options.value().autostart) {
+        const et::infra::ComApartment apartment;
+        if (*options.value().autostart != L"status") {
+            const auto changed = et::infra::SetAutostart(
+                *options.value().autostart == L"on",
+                L"\"" + et::ui::ReadProcessPath() + L"\" --agent");
+            if (!changed.ok()) {
+                et::ui::WriteLineToStdout(changed.error().message);
+                return kExitFailed;
+            }
+        }
+        et::ui::WriteLineToStdout(std::wstring(L"Start with Windows: ") +
+                                  (et::infra::IsAutostartEnabled() ? L"on" : L"off"));
         return kExitOk;
     }
     if (options.value().runAgent) {

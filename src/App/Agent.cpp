@@ -12,6 +12,7 @@
 #include "App/AboutDialog.h"
 #include "App/AppIcon.h"
 #include "App/DocumentDialog.h"
+#include "App/ReportPresenter.h"
 #include "App/SettingsDialog.h"
 #include "Application/HotkeyMatcher.h"
 #include "Application/Settings.h"
@@ -275,6 +276,7 @@ private:
                                                  L"\"" + executable_ + L"\" --agent");
         if (!changed.ok()) {
             log_.Write(app::LogLevel::Error, changed.error().message);
+            ShowProblem(changed.error().message);
         }
     }
 
@@ -371,6 +373,23 @@ bool StopRunningAgent() {
         CloseHandle(process);
     }
     return true;
+}
+
+void EnsureAgentRunning() {
+    if (FindWindowW(kWindowClass, nullptr) != nullptr) {
+        return;
+    }
+    const std::wstring executable = infra::SiblingPathOfModule(
+        reinterpret_cast<const void*>(&RunAgent), L"ExplorerMate.exe");
+    std::wstring commandLine = L"\"" + executable + L"\" --agent";
+    STARTUPINFOW startup{};
+    startup.cb = sizeof(startup);
+    PROCESS_INFORMATION process{};
+    if (CreateProcessW(executable.c_str(), commandLine.data(), nullptr, nullptr, FALSE, 0, nullptr,
+                       nullptr, &startup, &process)) {
+        CloseHandle(process.hThread);
+        CloseHandle(process.hProcess);
+    }
 }
 
 int RunAgent() {

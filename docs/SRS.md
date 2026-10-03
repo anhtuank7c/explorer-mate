@@ -96,6 +96,7 @@ flowchart LR
 | FR-C3 | Symbolic links, junctions and online-only cloud files are refused with a message. | `SelectionTests` (links); cloud files by design only |
 | FR-C4 | Every item must still exist when the command starts; otherwise the command is refused before anything changes. | `SelectionTests`, `GroupIntoNewFolderTests` |
 | FR-C5 | No command overwrites an existing item or merges into an existing folder. | `ShellGatewayTests`, `DuplicateInPlaceTests` |
+| FR-C7 | `--autostart on`, `off` or `status` turns "Start with Windows" for the tray agent on or off, or prints it. In a packaged install this is the package's startup task, off by default. | scripted through the alias |
 | FR-C6 | Cancelling a dialog changes nothing and shows no error. | `GroupIntoNewFolderTests`, `BulkRenameTests` |
 | FR-C7 | When a batch ends incomplete, the user is told which items failed or were skipped and why. Items never attempted are counted. | manual; `ReportPresenter` |
 | FR-C8 | The outcome of each item is reported separately as succeeded, failed, skipped or not attempted. | `ShellGatewayTests` |

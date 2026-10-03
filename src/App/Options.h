@@ -27,6 +27,7 @@ namespace et::ui {
 // Background agent (tray icon + keyboard shortcuts):
 //   --agent                                start it (a second one exits immediately)
 //   --stop-agent                           ask the running one to exit
+//   --autostart <on|off|status>            start the agent when signing in to Windows
 // Diagnostics:
 //   --diagnose-explorer [--delay <seconds>]  dump Explorer tabs, focus and selections
 struct Options {
@@ -38,6 +39,7 @@ struct Options {
     bool showLicenses = false;
     bool runAgent = false;
     bool stopAgent = false;
+    std::optional<std::wstring> autostart;  // "on", "off" or "status".
     bool diagnoseExplorer = false;
     unsigned delaySeconds = 0;
     unsigned watchSeconds = 0;  // --watch <seconds>: record changes instead of one snapshot.

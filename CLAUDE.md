@@ -47,6 +47,7 @@ Phụ thuộc chỉ đi vào trong; `scripts\check-layers.ps1` kiểm tra bằng
 - Script PowerShell phải chạy được trên Windows PowerShell 5.1 và chỉ dùng ký tự ASCII.
 - Test dùng Microsoft C++ Unit Test Framework; test không được chạm file ngoài fixture trong `%TEMP%`.
 
+- Chạy EXE không tham số sẽ mở About và tự chạy agent (`--agent`) từ chính thư mục đó nếu chưa có agent nào; agent chạy từ `build\x64\...` sẽ khóa file build, dừng bằng `--stop-agent`.
 - Agent phím tắt: `ExplorerMate.exe --agent` / `--stop-agent`. `install-dev.ps1` tự dừng và chạy lại agent; build không bị chặn vì agent chạy từ `build\install`.
 - Kiểm tra nhận diện tab/focus: `scripts\test-tab-detection.ps1` (tự mở và đóng một cửa sổ Explorer trên fixture). Xem trạng thái hiện tại: `ExplorerMate.exe --diagnose-explorer | Out-String`.
 - Bản cài (manifest release) có alias `explorermate` (app execution alias kiểu console): terminal chờ và in output, không cần pipeline. Manifest dev (sparse) chưa có alias.

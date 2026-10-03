@@ -6,6 +6,7 @@
 # the Windows certificate store by thumbprint, so no password or key file ever appears on a
 # command line or in this repository.
 #
+#   -Store           build the package to upload to Partner Center: Store identity, unsigned.
 #   -RegisterLoose   instead of packing, register an unpacked layout for the current user
 #                    (needs Developer Mode). Lets the full package be tried without a
 #                    certificate. Conflicts with the development package, which must be
@@ -23,7 +24,10 @@ param(
     [ValidatePattern('^([0-9A-Fa-f]{40})?$')][string]$CertificateThumbprint = '',
     # RFC 3161 timestamp server, so the signature stays valid after the certificate expires.
     [string]$TimestampUrl = 'http://timestamp.digicert.com',
-    [switch]$RegisterLoose
+    [switch]$RegisterLoose,
+    # Use the Microsoft Store identity from packaging\store\identity.json (the values Partner
+    # Center assigned) and name the output for the Store. The Store signs the package.
+    [switch]$Store
 )
 
 . (Join-Path $PSScriptRoot 'Common.ps1')
@@ -54,6 +58,13 @@ function Write-PackageLayout([string]$Directory) {
     New-PackageResourceIndex $Directory
 }
 
+if ($Store) {
+    if ($RegisterLoose -or $CertificateThumbprint) { throw '-Store builds an unsigned package for upload; do not combine it with -RegisterLoose or -CertificateThumbprint.' }
+    $identity = Get-Content (Join-Path $RepoRoot 'packaging\store\identity.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    $IdentityName = $identity.identityName
+    $Publisher = $identity.publisher
+    $PublisherDisplayName = $identity.publisherDisplayName
+}
 if (-not $Version) { $Version = (Get-ProductVersion) + '.0' }
 $binDir = Join-Path $RepoRoot "build\x64\$Configuration"
 $packageDir = Join-Path $RepoRoot 'build\package'
@@ -105,7 +116,7 @@ $stagingDir = Join-Path $packageDir 'staging'
 Remove-BuildFolder $stagingDir
 Write-PackageLayout $stagingDir
 
-$msix = Join-Path $packageDir "ExplorerMate_${Version}_x64.msix"
+$msix = Join-Path $packageDir $(if ($Store) { "ExplorerMate_${Version}_x64_Store.msix" } else { "ExplorerMate_${Version}_x64.msix" })
 & (Get-SdkTool 'makeappx.exe') pack /d $stagingDir /p $msix /o | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "makeappx failed (exit code $LASTEXITCODE)." }
 Write-Host "Packed $msix"
