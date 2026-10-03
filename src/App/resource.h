@@ -4,6 +4,9 @@
 #define IDC_STATIC (-1)
 #endif
 
+// The lowest-numbered icon resource is the one Windows shows for the EXE file itself.
+#define IDI_APP 1
+
 #define IDD_FOLDER_NAME 101
 #define IDD_BULK_RENAME 102
 #define IDD_SETTINGS 103

@@ -49,7 +49,11 @@ To rehearse steps 4's build without tagging, run the Release workflow by hand ("
 4. The listing needs a privacy policy. The facts for it: no network access, no telemetry, logs stay on the device, the keyboard hook only recognises the configured shortcuts and records nothing.
 5. The `runFullTrust` capability must be justified: the app is a classic desktop program that performs file operations through the Windows shell and installs a keyboard hook for its shortcuts.
 
-Not done yet for a Store build: "Start with Windows" must use the package startup-task mechanism instead of the Run registry key, and real logos must replace the placeholders.
+Not done yet for a Store build: "Start with Windows" must use the package startup-task mechanism instead of the Run registry key.
+
+## Icons
+
+The icon is drawn in two SVG masters under `packaging/icon/` (the full drawing, and a simplified one for 16-24 px). `scripts\build-icons.ps1` renders them with headless Microsoft Edge into `src/App/ExplorerMate.ico`, the package logos in `packaging/Assets/` (including the size-specific "unplated" variants picked up through `resources.pri`) and `packaging/store/StoreLogo-300.png` for the Store listing. The generated files are committed; run the script again only after editing an SVG.
 
 ## After publishing
 

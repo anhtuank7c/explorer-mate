@@ -32,6 +32,7 @@
   <ItemGroup>
     <ClInclude Include="AboutDialog.h" />
     <ClInclude Include="ActionRunner.h" />
+    <ClInclude Include="AppIcon.h" />
     <ClInclude Include="Agent.h" />
     <ClInclude Include="CommandLine.h" />
     <ClInclude Include="DialogPrompt.h" />
@@ -51,6 +52,7 @@
   <ItemGroup>
     <ClCompile Include="AboutDialog.cpp" />
     <ClCompile Include="ActionRunner.cpp" />
+    <ClCompile Include="AppIcon.cpp" />
     <ClCompile Include="Agent.cpp" />
     <ClCompile Include="CommandLine.cpp" />
     <ClCompile Include="DialogPrompt.cpp" />

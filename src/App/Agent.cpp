@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "App/AboutDialog.h"
+#include "App/AppIcon.h"
 #include "App/SettingsDialog.h"
 #include "Application/HotkeyMatcher.h"
 #include "Application/Settings.h"
@@ -175,7 +176,7 @@ private:
         icon.uID = kTrayIconId;
         icon.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
         icon.uCallbackMessage = kTrayMessage;
-        icon.hIcon = LoadIconW(nullptr, IDI_APPLICATION);
+        icon.hIcon = SmallAppIcon();
         wcscpy_s(icon.szTip, std::wstring(domain::ProductName()).c_str());
         Shell_NotifyIconW(NIM_ADD, &icon);
     }

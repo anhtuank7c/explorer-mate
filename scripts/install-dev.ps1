@@ -66,6 +66,7 @@ $versioned = [regex]::Replace($manifest, '(<Identity\b[^>]*?\bVersion=")[^"]*(")
 if ($versioned -notmatch ('Version="' + [regex]::Escape((Get-ProductVersion)) + '\.0"')) { throw 'Could not set the package version in the manifest.' }
 [IO.File]::WriteAllText((Join-Path $stageDir 'AppxManifest.xml'), $versioned, (New-Object Text.UTF8Encoding $false))
 Copy-Item (Join-Path $RepoRoot 'packaging\Assets') $stageDir -Recurse -Force
+New-PackageResourceIndex $stageDir
 
 Add-AppxPackage -Register (Join-Path $stageDir 'AppxManifest.xml') -ExternalLocation $stageDir
 

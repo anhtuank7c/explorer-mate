@@ -44,6 +44,31 @@ function Remove-BuildFolder([string]$Path) {
     [IO.Directory]::Delete($full, $true)
 }
 
+function Get-SdkTool([string]$Name) {
+    $kits = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\bin'
+    $tool = Get-ChildItem $kits -Directory -Filter '10.*' | Sort-Object Name -Descending |
+        ForEach-Object { Join-Path $_.FullName "x64\$Name" } | Where-Object { Test-Path $_ } |
+        Select-Object -First 1
+    if (-not $tool) { throw "$Name not found in the Windows SDK." }
+    return $tool
+}
+
+# Writes resources.pri into a package folder. Without it Windows only sees the plain logo
+# files; with it, it picks the size-specific and "unplated" variants (Square44x44Logo
+# .targetsize-16_altform-unplated.png and so on), so the taskbar and Start show a crisp icon
+# without a coloured backplate. The folder must already contain AppxManifest.xml.
+function New-PackageResourceIndex([string]$PackageFolder) {
+    $makepri = Get-SdkTool 'makepri.exe'
+    $workDir = Join-Path $RepoRoot 'build\pri'
+    New-Item -ItemType Directory -Force $workDir | Out-Null
+    $config = Join-Path $workDir 'priconfig.xml'
+    & $makepri createconfig /cf $config /dq en-US /o | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "makepri createconfig failed (exit code $LASTEXITCODE)." }
+    $index = Join-Path $PackageFolder 'resources.pri'
+    & $makepri new /pr $PackageFolder /cf $config /mn (Join-Path $PackageFolder 'AppxManifest.xml') /of $index /o | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "makepri new failed (exit code $LASTEXITCODE)." }
+}
+
 function Get-VsTestPath {
     $path = Join-Path (Get-VsInstallPath) 'Common7\IDE\Extensions\TestPlatform\vstest.console.exe'
     if (-not (Test-Path $path)) { throw "vstest.console.exe not found at $path" }

@@ -131,6 +131,7 @@ Dependencies point inward only: `App`/`ShellExtension` → `Infrastructure` → 
 | Static analysis (MSVC `/analyze`, findings are errors) | `scripts\build.ps1 -Configuration Debug -Analyze` |
 | Check exploit mitigations in the binaries (BinSkim) | `scripts\check-binaries.ps1` (downloads BinSkim into `build\tools` on first use) |
 | Build the release-style MSIX | `scripts\package-msix.ps1` (unsigned unless you pass `-CertificateThumbprint`) |
+| Regenerate the icon files after editing `packaging\icon\*.svg` | `scripts\build-icons.ps1` (needs Microsoft Edge; the generated files are committed) |
 
 CI on GitHub runs the build, the tests, MSVC analysis, CodeQL and BinSkim on every push and pull request (`.github/workflows`). How a release is cut is in [`docs/RELEASING.md`](docs/RELEASING.md); how to report a vulnerability is in [`SECURITY.md`](SECURITY.md); user-visible changes go in [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -326,6 +327,7 @@ Phụ thuộc chỉ đi vào trong: `App`/`ShellExtension` → `Infrastructure` 
 | Phân tích tĩnh (MSVC `/analyze`, mọi phát hiện đều là lỗi) | `scripts\build.ps1 -Configuration Debug -Analyze` |
 | Kiểm tra các biện pháp chống khai thác trong file nhị phân (BinSkim) | `scripts\check-binaries.ps1` (tự tải BinSkim vào `build\tools` ở lần chạy đầu) |
 | Dựng gói MSIX kiểu phát hành | `scripts\package-msix.ps1` (chưa ký, trừ khi truyền `-CertificateThumbprint`) |
+| Sinh lại các file icon sau khi sửa `packaging\icon\*.svg` | `scripts\build-icons.ps1` (cần Microsoft Edge; file sinh ra đã được commit sẵn) |
 
 CI trên GitHub chạy build, test, phân tích MSVC, CodeQL và BinSkim cho mỗi lần push và pull request (`.github/workflows`). Quy trình phát hành nằm ở [`docs/RELEASING.md`](docs/RELEASING.md); cách báo lỗ hổng bảo mật ở [`SECURITY.md`](SECURITY.md); thay đổi người dùng nhìn thấy được ghi vào [`CHANGELOG.md`](CHANGELOG.md).
 

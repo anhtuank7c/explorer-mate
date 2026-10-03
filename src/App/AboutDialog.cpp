@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "App/AppIcon.h"
 #include "App/resource.h"
 #include "Domain/ProductInfo.h"
 
@@ -41,6 +42,7 @@ INT_PTR CALLBACK AboutProc(HWND dialog, UINT message, WPARAM wParam, LPARAM lPar
     switch (message) {
         case WM_INITDIALOG:
             FillTexts(dialog);
+            ApplyAppIcon(dialog);
             SetForegroundWindow(dialog);
             return TRUE;
         case WM_NOTIFY: {

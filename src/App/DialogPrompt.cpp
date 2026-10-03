@@ -8,6 +8,7 @@
 #include <cwchar>
 #include <string>
 
+#include "App/AppIcon.h"
 #include "App/resource.h"
 
 namespace et::ui {
@@ -30,6 +31,7 @@ std::wstring TextOf(HWND dialog, int controlId) {
 // Passing through "topmost" raises it above Explorer even when Windows refuses to hand over
 // keyboard focus; it does not stay topmost.
 void BringToFront(HWND dialog) {
+    ApplyAppIcon(dialog);
     SetWindowPos(dialog, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     SetForegroundWindow(dialog);
     if (GetForegroundWindow() != dialog) {

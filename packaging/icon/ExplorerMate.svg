@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <!-- Explorer Mate app icon: the Explorer folder with two sparkles.
+       Master for 32 px and larger; ExplorerMate-small.svg is the simplified drawing for 16-24 px.
+       PNG and ICO files are generated from these by scripts/build-icons.ps1. -->
+  <path d="M4 15a3 3 0 0 1 3-3h10.3a3 3 0 0 1 2.1.9L22 15.5h19a3 3 0 0 1 3 3V22H4z" fill="#E8A200"/>
+  <rect x="4" y="18" width="40" height="24" rx="3" fill="#FFC83D"/>
+  <path d="M36 5C36.9 10.5 40.5 14.1 46 15C40.5 15.9 36.9 19.5 36 25C35.1 19.5 31.5 15.9 26 15C31.5 14.1 35.1 10.5 36 5Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M36 5C36.9 10.5 40.5 14.1 46 15C40.5 15.9 36.9 19.5 36 25C35.1 19.5 31.5 15.9 26 15C31.5 14.1 35.1 10.5 36 5Z" fill="#0F6CBD"/>
+  <path d="M24 3C24.36 5.2 25.8 6.64 28 7C25.8 7.36 24.36 8.8 24 11C23.64 8.8 22.2 7.36 20 7C22.2 6.64 23.64 5.2 24 3Z" fill="#0F6CBD"/>
+</svg>

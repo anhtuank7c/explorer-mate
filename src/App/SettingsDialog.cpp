@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 
+#include "App/AppIcon.h"
 #include "App/resource.h"
 
 namespace et::ui {
@@ -85,6 +86,7 @@ INT_PTR CALLBACK SettingsProc(HWND dialog, UINT message, WPARAM wParam, LPARAM l
             for (const HotkeyField& field : kFields) {
                 ShowChord(dialog, field.controlId, state->settings.ChordFor(field.action));
             }
+            ApplyAppIcon(dialog);
             SetForegroundWindow(dialog);
             return TRUE;
         case WM_COMMAND:

@@ -260,6 +260,15 @@ Chưa làm / để lại:
 - Cài đặt repo cần chủ repo bật: private vulnerability reporting (để `SECURITY.md` đúng), branch protection cho `main`, Dependabot alerts.
 - Chưa có chứng thư ký; bước ký trong `release.yml` chưa tồn tại.
 
+## Icon ứng dụng (03/10/2026)
+
+- Thiết kế do người dùng chọn trên canvas Claude Design: thư mục vàng của Explorer với hai sparkle xanh dương, viền tách màu trắng (phương án "A1 - Folder sparkle"). Người dùng chọn xanh dương vì hợp mệnh Mộc (Kỷ Tỵ 1989) theo quan niệm ngũ hành.
+- Hai file gốc `packaging/icon/ExplorerMate.svg` và `ExplorerMate-small.svg` (bản rút gọn cho 16-24 px: một sparkle to, không có sparkle nhỏ).
+- `scripts/build-icons.ps1` render SVG bằng Edge headless ra: `src/App/ExplorerMate.ico` (16-256 px), 21 logo trong `packaging/Assets` (gồm các biến thể targetsize/unplated), `packaging/store/StoreLogo-300.png`.
+- EXE có icon (`IDI_APP`); khay hệ thống, thanh tiêu đề các dialog và cửa sổ giới thiệu dùng icon này. Gói có `resources.pri` (makepri) để Windows chọn đúng biến thể logo.
+- Bằng chứng: 113/113 test pass; gói MSIX pack được; chụp cửa sổ giới thiệu của bản đã cài thấy icon ở thanh tiêu đề và trong dialog; bảng so cỡ 16/24/32/48 px trên nền sáng và tối đọc được.
+- NOT RUN: icon trên taskbar, Start menu, khay hệ thống và nhóm lệnh trong menu chuột phải (cần người nhìn). Ba lệnh menu chưa có icon riêng.
+
 ## Giai đoạn 3 — Phát hành
 
 Kênh: Microsoft Store, WinGet, file tải trực tiếp từ GitHub. Cả ba dùng chung một gói MSIX đầy đủ; bản dev vẫn dùng sparse package.

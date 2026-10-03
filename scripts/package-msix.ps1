@@ -28,15 +28,6 @@ param(
 
 . (Join-Path $PSScriptRoot 'Common.ps1')
 
-function Get-SdkTool([string]$name) {
-    $kits = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\bin'
-    $tool = Get-ChildItem $kits -Directory -Filter '10.*' | Sort-Object Name -Descending |
-        ForEach-Object { Join-Path $_.FullName "x64\$name" } | Where-Object { Test-Path $_ } |
-        Select-Object -First 1
-    if (-not $tool) { throw "$name not found in the Windows SDK." }
-    return $tool
-}
-
 # Copies the binaries, logos and a filled-in manifest into $Directory.
 function Write-PackageLayout([string]$Directory) {
     New-Item -ItemType Directory -Force $Directory | Out-Null
@@ -57,6 +48,7 @@ function Write-PackageLayout([string]$Directory) {
     }
     if ($manifest -match '@@') { throw 'The manifest still contains unreplaced tokens.' }
     [IO.File]::WriteAllText((Join-Path $Directory 'AppxManifest.xml'), $manifest, (New-Object Text.UTF8Encoding $false))
+    New-PackageResourceIndex $Directory
 }
 
 if (-not $Version) { $Version = (Get-ProductVersion) + '.0' }
