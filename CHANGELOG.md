@@ -18,6 +18,11 @@ All notable changes to Explorer Mate are recorded here. The format follows
 
 - File Explorer now shows the result of a command immediately; before, the file list could keep showing moved files until refreshed with F5.
 
+### Changed
+
+- Commands start much sooner on large selections: preparing 5000 items took 15 to 27 seconds with nothing on screen and now takes about 1.5 seconds.
+- Duplicating a folder no longer uses memory in proportion to the number of files inside it.
+
 ### Security
 
 - Release binaries are built with Control Flow Guard, CET shadow-stack compatibility and a System32-only DLL search path for imports.

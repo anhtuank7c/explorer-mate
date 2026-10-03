@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <utility>
 
@@ -66,6 +67,76 @@ ComPtr<IShellItem> ShellItemFor(const std::wstring& path, HRESULT& result) {
     return item;
 }
 
+struct PidlDeleter {
+    void operator()(ITEMIDLIST* pidl) const { CoTaskMemFree(pidl); }
+};
+using Pidl = std::unique_ptr<ITEMIDLIST, PidlDeleter>;
+
+// Creates the shell items of a batch. Parsing a full path costs a few milliseconds, which
+// adds up to a long silent wait before the Shell shows any progress. The items of one
+// request share a parent folder, so that folder is bound once and each item is then parsed
+// by name inside it. Anything unexpected falls back to parsing the full path.
+class ShellItemFactory {
+public:
+    // `longPath` is `path` as the Shell would report it.
+    ComPtr<IShellItem> Create(const std::wstring& path, const std::wstring& longPath,
+                              HRESULT& result) {
+        if (ComPtr<IShellItem> item = CreateInParent(path, longPath)) {
+            result = S_OK;
+            return item;
+        }
+        return ShellItemFor(path, result);
+    }
+
+    // The item of the folder containing `path`.
+    ComPtr<IShellItem> ParentItem(const std::wstring& path, HRESULT& result) {
+        EnsureParent(domain::ParentOf(path));
+        result = parentResult_;
+        return parentItem_;
+    }
+
+private:
+    void EnsureParent(std::wstring_view parent) {
+        if (hasParent_ && SamePath(parent, parentPath_)) {
+            return;
+        }
+        hasParent_ = true;
+        parentPath_ = parent;
+        folder_.Reset();
+        parentItem_ = ShellItemFor(parentPath_, parentResult_);
+        if (SUCCEEDED(parentResult_) &&
+            FAILED(parentItem_->BindToHandler(nullptr, BHID_SFObject, IID_PPV_ARGS(&folder_)))) {
+            folder_.Reset();
+        }
+    }
+
+    ComPtr<IShellItem> CreateInParent(const std::wstring& path, const std::wstring& longPath) {
+        EnsureParent(domain::ParentOf(path));
+        if (!folder_) {
+            return nullptr;
+        }
+        std::wstring name(domain::NameOf(path));
+        ITEMIDLIST* raw = nullptr;
+        if (FAILED(folder_->ParseDisplayName(nullptr, nullptr, name.data(), nullptr, &raw, nullptr))) {
+            return nullptr;
+        }
+        const Pidl child(raw);
+        ComPtr<IShellItem> item;
+        if (FAILED(SHCreateItemWithParent(nullptr, folder_.Get(), child.get(), IID_PPV_ARGS(&item)))) {
+            return nullptr;
+        }
+        // The item must be exactly the one asked for; this code moves and renames files.
+        const std::wstring created = FileSystemPath(item.Get());
+        return (SamePath(created, path) || SamePath(created, longPath)) ? item : nullptr;
+    }
+
+    bool hasParent_ = false;
+    std::wstring parentPath_;
+    HRESULT parentResult_ = E_FAIL;
+    ComPtr<IShellItem> parentItem_;
+    ComPtr<IShellFolder> folder_;
+};
+
 bool IsCancellation(HRESULT result) {
     return result == COPYENGINE_E_USER_CANCELLED || result == HRESULT_FROM_WIN32(ERROR_CANCELLED) ||
            result == E_ABORT;
@@ -88,6 +159,11 @@ public:
         : stopAfterFirstFailure_(stopAfterFirstFailure) {}
 
     const std::vector<CompletedItem>& completed() const { return completed_; }
+
+    // Only items directly inside these folders are recorded. The Shell also reports every
+    // file inside a copied folder; keeping those would cost memory in proportion to the
+    // folder's content, and nothing reads them.
+    void SetRequestedParents(std::vector<std::wstring> parents) { parents_ = std::move(parents); }
 
     IFACEMETHODIMP StartOperations() override { return S_OK; }
     IFACEMETHODIMP FinishOperations(HRESULT) override { return S_OK; }
@@ -128,7 +204,15 @@ private:
     // assumption that this one vacated its name.
     HRESULT Record(IShellItem* item, HRESULT result, IShellItem* created) {
         try {
-            completed_.push_back({FileSystemPath(item), FileSystemPath(created), result});
+            std::wstring source = FileSystemPath(item);
+            const std::wstring_view parent = domain::ParentOf(source);
+            const bool requested =
+                std::any_of(parents_.begin(), parents_.end(),
+                            [&](const std::wstring& candidate) { return SamePath(candidate, parent); });
+            if (!requested) {
+                return S_OK;
+            }
+            completed_.push_back({std::move(source), FileSystemPath(created), result});
         } catch (...) {
             return E_OUTOFMEMORY;
         }
@@ -138,6 +222,7 @@ private:
     }
 
     bool stopAfterFirstFailure_;
+    std::vector<std::wstring> parents_;
     std::vector<CompletedItem> completed_;
 };
 
@@ -147,7 +232,8 @@ struct BatchOptions {
 };
 
 // Queues one operation for `item`, the shell item of sources[index].
-using QueueOperation = std::function<HRESULT(IFileOperation&, IShellItem*, size_t index)>;
+using QueueOperation =
+    std::function<HRESULT(IFileOperation&, IShellItem* item, ShellItemFactory&, size_t index)>;
 
 DWORD OperationFlags(OperationUi ui, DWORD extraFlags) {
     // FOF_NOCONFIRMATION is deliberately absent: it would answer "yes" to overwrite prompts.
@@ -211,13 +297,20 @@ OperationReport RunBatch(OperationUi ui, const std::vector<std::wstring>& source
     // Items that could not even be queued keep their own failure reason.
     std::vector<std::optional<HRESULT>> queueFailures(sources.size());
     std::vector<std::wstring> reportedPaths(sources.size());
+    std::vector<std::wstring> parents;
+    ShellItemFactory items;
     bool anyQueued = false;
     for (size_t index = 0; index < sources.size(); ++index) {
         reportedPaths[index] = LongPath(sources[index]);
+        const std::wstring_view parent = domain::ParentOf(reportedPaths[index]);
+        if (std::none_of(parents.begin(), parents.end(),
+                         [&](const std::wstring& known) { return SamePath(known, parent); })) {
+            parents.emplace_back(parent);
+        }
         HRESULT itemResult = S_OK;
-        const ComPtr<IShellItem> item = ShellItemFor(sources[index], itemResult);
+        const ComPtr<IShellItem> item = items.Create(sources[index], reportedPaths[index], itemResult);
         if (SUCCEEDED(itemResult)) {
-            itemResult = queue(*operation.Get(), item.Get(), index);
+            itemResult = queue(*operation.Get(), item.Get(), items, index);
         }
         if (FAILED(itemResult)) {
             queueFailures[index] = itemResult;
@@ -234,6 +327,7 @@ OperationReport RunBatch(OperationUi ui, const std::vector<std::wstring>& source
         std::any_of(queueFailures.begin(), queueFailures.end(),
                     [](const std::optional<HRESULT>& failure) { return failure.has_value(); });
 
+    sink->SetRequestedParents(std::move(parents));
     BOOL aborted = FALSE;
     if (anyQueued && !queueBroken) {
         const HRESULT performed = operation->PerformOperations();
@@ -365,7 +459,7 @@ OperationReport ShellFileOperationGateway::MoveItemsInto(const std::vector<std::
         return AllFailed(sources, result);
     }
     OperationReport report =
-        RunBatch(ui_, sources, {}, [&](IFileOperation& operation, IShellItem* item, size_t) {
+        RunBatch(ui_, sources, {}, [&](IFileOperation& operation, IShellItem* item, ShellItemFactory&, size_t) {
             return operation.MoveItem(item, destination.Get(), nullptr, nullptr);
         });
     NotifyParentsChanged(sources);
@@ -377,10 +471,10 @@ OperationReport ShellFileOperationGateway::DuplicateItems(const std::vector<std:
     BatchOptions options;
     options.extraFlags = FOF_RENAMEONCOLLISION;
     OperationReport report = RunBatch(
-        ui_, sources, options, [&](IFileOperation& operation, IShellItem* item, size_t index) {
+        ui_, sources, options,
+        [&](IFileOperation& operation, IShellItem* item, ShellItemFactory& items, size_t index) {
             HRESULT result = S_OK;
-            const ComPtr<IShellItem> parent =
-                ShellItemFor(std::wstring(domain::ParentOf(sources[index])), result);
+            const ComPtr<IShellItem> parent = items.ParentItem(sources[index], result);
             return FAILED(result) ? result
                                   : operation.CopyItem(item, parent.Get(), nullptr, nullptr);
         });
@@ -406,7 +500,8 @@ OperationReport ShellFileOperationGateway::RenameItems(
             sources.push_back(sourceOf(index));
         }
         const OperationReport segment = RunBatch(
-            ui_, sources, options, [&](IFileOperation& operation, IShellItem* item, size_t index) {
+            ui_, sources, options,
+            [&](IFileOperation& operation, IShellItem* item, ShellItemFactory&, size_t index) {
                 return operation.RenameItem(item, steps[from + index].to.c_str(), nullptr);
             });
         report.items.insert(report.items.end(), segment.items.begin(), segment.items.end());

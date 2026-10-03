@@ -287,6 +287,16 @@ Chưa làm / để lại:
 - `--diagnose-explorer` giờ in thêm `itemsInView` cho mỗi tab.
 - NOT RUN: kiểm tra tương tự cho Duplicate và Bulk rename (cùng cơ chế thông báo, chưa đo riêng); người dùng chưa xác nhận lại trên thư mục thật.
 
+## Tối ưu cho selection lớn (03/10/2026)
+
+- Đo trên fixture `%TEMP%` (Release, `--silent`, file 1 byte, SSD). Trước khi sửa, pha chuẩn bị (tạo shell item cho từng đường dẫn, chưa có UI nào) tốn ~3 ms/mục: 15 s cho 5000 file với rename/group, 26,7 s với duplicate (tạo thêm item thư mục cha cho từng mục).
+- Sửa trong `ShellFileOperationGateway`: `ShellItemFactory` bind thư mục cha một lần rồi parse từng mục theo tên bên trong nó (kiểm tra lại đường dẫn của item, sai thì quay về parse đường dẫn đầy đủ); Duplicate dùng lại item thư mục cha; `ProgressSink` chỉ ghi các mục nằm trực tiếp trong thư mục được yêu cầu (trước đó ghi cả từng file bên trong thư mục được copy: 60.001 bản ghi cho 1 thư mục).
+- Kết quả (5000 file, tổng thời gian trước -> sau): rename 23 s -> 7,5 s; group 35 s -> 14,8 s; duplicate 59 s -> 23,9 s. Pha chuẩn bị còn ~1,5 s ở cả ba lệnh. Duplicate 1 thư mục 60.000 file: bộ nhớ đỉnh 70 MB -> 42 MB.
+- Thời gian Shell thực thi cũng giảm trong lần đo sau (ví dụ rename 8,0 s -> 4,7 s); chưa xác định được do thay đổi này hay do dao động của máy.
+- Đo lại bằng `scripts\measure-large-selection.ps1`. 114/114 test pass (Debug, Release).
+- Không làm: engine copy riêng đa luồng (mất undo, hộp thoại xung đột và progress chuẩn của Shell). Copy nhiều file nhỏ qua Shell vẫn chậm hơn robocopy khoảng 3,5 lần.
+- NOT RUN: đo ở chế độ có UI (progress window của Shell); đo trên HDD/ổ mạng; đường hotkey (`EnumerateExplorerTabs` đọc selection của mọi tab) chưa đo và chưa sửa.
+
 ## Giai đoạn 3 — Phát hành
 
 Kênh: Microsoft Store, WinGet, file tải trực tiếp từ GitHub. Cả ba dùng chung một gói MSIX đầy đủ; bản dev vẫn dùng sparse package.
