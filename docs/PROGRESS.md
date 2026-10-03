@@ -310,6 +310,7 @@ Chưa làm / để lại:
 
 - About: tác giả hiển thị "Tuan Nguyen (anhtuank7c)"; thêm liên kết mã nguồn (`github.com/anhtuank7c/explorer-mate`) và báo lỗi (`/issues`); thêm nút "What's new".
 - Cửa sổ "What's new" (`ChangelogDialog`, cũng mở được bằng `--changelog`) hiển thị `CHANGELOG.md` được nhúng vào EXE lúc build (RCDATA), chuyển Markdown sang văn bản thường.
+- Menu khay có thêm mục "What's new" (trên "About..."), mở thẳng cửa sổ changelog. NOT RUN: bấm thử mục này trên menu khay thật (menu chỉ mở bằng click thật).
 - Đã chụp cả hai cửa sổ để kiểm tra bố cục. NOT RUN: bấm thử các liên kết (sẽ mở trình duyệt); ảnh Store `04-about.png` chưa chụp lại.
 
 ## Giấy phép bên thứ ba (03/10/2026)

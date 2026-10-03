@@ -11,6 +11,7 @@
 
 #include "App/AboutDialog.h"
 #include "App/AppIcon.h"
+#include "App/DocumentDialog.h"
 #include "App/SettingsDialog.h"
 #include "Application/HotkeyMatcher.h"
 #include "Application/Settings.h"
@@ -37,6 +38,7 @@ enum MenuCommand : UINT {
     kToggleHotkeys = 1,
     kOpenSettings,
     kToggleAutostart,
+    kWhatsNew,
     kAbout,
     kExit,
 };
@@ -196,6 +198,7 @@ private:
         AppendMenuW(menu, MF_STRING, kOpenSettings, L"Settings...");
         AppendMenuW(menu, MF_STRING | (infra::IsAutostartEnabled() ? MF_CHECKED : 0),
                     kToggleAutostart, L"Start with Windows");
+        AppendMenuW(menu, MF_STRING, kWhatsNew, L"What's new");
         AppendMenuW(menu, MF_STRING, kAbout, L"About...");
         AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
         AppendMenuW(menu, MF_STRING, kExit, L"Exit");
@@ -221,6 +224,9 @@ private:
                 break;
             case kToggleAutostart:
                 ToggleAutostart();
+                break;
+            case kWhatsNew:
+                OpenWhatsNew();
                 break;
             case kAbout:
                 OpenAbout();
@@ -253,6 +259,15 @@ private:
         showingAbout_ = true;
         ShowAbout();
         showingAbout_ = false;
+    }
+
+    void OpenWhatsNew() {
+        if (showingWhatsNew_) {
+            return;
+        }
+        showingWhatsNew_ = true;
+        ShowChangelog(nullptr);
+        showingWhatsNew_ = false;
     }
 
     void ToggleAutostart() {
@@ -336,6 +351,7 @@ private:
     bool handlingHotkey_ = false;
     bool editingSettings_ = false;
     bool showingAbout_ = false;
+    bool showingWhatsNew_ = false;
 };
 
 }  // namespace
