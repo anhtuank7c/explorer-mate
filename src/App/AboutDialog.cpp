@@ -93,6 +93,28 @@ INT_PTR CALLBACK AboutProc(HWND dialog, UINT message, WPARAM wParam, LPARAM lPar
 
 }  // namespace
 
+std::wstring AboutText() {
+    return Text(domain::ProductName()) + L" " + Text(domain::ProductVersion()) +
+           L"\n"
+           L"Extra commands for File Explorer on Windows 11.\n"
+           L"\n"
+           L"  New folder with selection: move the selected items into a new folder.\n"
+           L"  Bulk rename: rename many files at once with a name mask and a counter.\n"
+           L"  Duplicate: copy the selected items next to the originals.\n"
+           L"\n"
+           L"Author:      " + Text(domain::ProductAuthor()) +
+           L"\n"
+           L"Website:     " + Text(domain::ProductWebsiteUrl()) +
+           L"\n"
+           L"Source code: " + Text(domain::ProductRepositoryUrl()) +
+           L"\n"
+           L"Problems:    " + Text(domain::ProductIssuesUrl()) +
+           L"\n"
+           L"\n"
+           L"Run with --help for the command line, --changelog for what is new, --licenses for\n"
+           L"the license texts.";
+}
+
 void ShowAbout() {
     INITCOMMONCONTROLSEX controls{sizeof(controls), ICC_LINK_CLASS | ICC_STANDARD_CLASSES};
     InitCommonControlsEx(&controls);

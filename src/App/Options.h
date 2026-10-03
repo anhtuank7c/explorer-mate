@@ -11,7 +11,8 @@
 namespace et::ui {
 
 // Command line of ExplorerMate.exe:
-//   (no arguments) or --about              show the introduction window
+//   (no arguments)                         show the introduction window
+//   --about, --changelog, --licenses       print that information; no window opens
 //   --version
 //   --help
 //   --request <file>                       run the request written by the shell extension
@@ -31,6 +32,7 @@ namespace et::ui {
 struct Options {
     bool showVersion = false;
     bool showHelp = false;
+    bool showIntroduction = false;  // No arguments: started from the Start menu or by double-click.
     bool showAbout = false;
     bool showChangelog = false;
     bool showLicenses = false;

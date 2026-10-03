@@ -105,9 +105,10 @@ function Get-DrawnScore([System.Drawing.Bitmap]$Bitmap) {
 
 # Starts the worker with a dialog, optionally types into controls, captures the dialog and
 # cancels it. Nothing on disk changes.
-function Get-DialogCapture([string[]]$Arguments, [hashtable]$SetText = @{}) {
+function Get-DialogCapture([string[]]$Arguments = @(), [hashtable]$SetText = @{}) {
     $quoted = $Arguments | ForEach-Object { if ($_ -match '\s') { '"' + $_ + '"' } else { $_ } }
-    $process = Start-Process $exe -ArgumentList $quoted -PassThru
+    # Without arguments the program opens its introduction window.
+    $process = if ($quoted) { Start-Process $exe -ArgumentList $quoted -PassThru } else { Start-Process $exe -PassThru }
     $dialog = [IntPtr]::Zero
     foreach ($attempt in 1..60) {
         Start-Sleep -Milliseconds 100
@@ -185,7 +186,7 @@ if ($Only -contains 'group') {
 }
 
 if ($Only -contains 'about') {
-    $about = Get-DialogCapture @('--about')
+    $about = Get-DialogCapture @()
     Save-StoreScreenshot $about 'Three commands, right where you work' 'In the right-click menu of File Explorer, and as keyboard shortcuts' '04-about.png'
 }
 

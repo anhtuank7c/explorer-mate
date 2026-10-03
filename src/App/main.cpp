@@ -6,8 +6,8 @@
 #include "App/AboutDialog.h"
 #include "App/ActionRunner.h"
 #include "App/Agent.h"
-#include "App/DocumentDialog.h"
 #include "App/CommandLine.h"
+#include "App/DocumentDialog.h"
 #include "App/DialogPrompt.h"
 #include "App/ExplorerDiagnostics.h"
 #include "App/Options.h"
@@ -90,15 +90,21 @@ int Run(const std::vector<std::wstring>& arguments) {
         return kExitOk;
     }
 
+    // Asked for on the command line, these stay in the terminal; the windows with the same
+    // content are reached from the introduction window and the tray menu.
     if (options.value().showChangelog) {
-        et::ui::ShowChangelog(nullptr);
+        et::ui::WriteLineToStdout(et::ui::ChangelogText());
         return kExitOk;
     }
     if (options.value().showLicenses) {
-        et::ui::ShowLicenses(nullptr);
+        et::ui::WriteLineToStdout(et::ui::LicensesText());
         return kExitOk;
     }
     if (options.value().showAbout) {
+        et::ui::WriteLineToStdout(et::ui::AboutText());
+        return kExitOk;
+    }
+    if (options.value().showIntroduction) {
         et::ui::ShowAbout();
         return kExitOk;
     }

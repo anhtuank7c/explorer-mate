@@ -331,6 +331,8 @@ Chưa làm / để lại:
 - `package-msix.ps1 -RegisterLoose`: khi manifest đổi mà version không đổi (0x80073CFB) thì gỡ đăng ký cũ với `-PreserveApplicationData` rồi đăng ký lại.
 - Chưa làm: bung ký tự đại diện (`*.jpg`); alias cho manifest dev (sparse). NOT RUN: Windows Terminal; gói MSIX đã đóng gói và ký (mới thử bản loose).
 
+- Sau đó theo yêu cầu người dùng: `--about`, `--changelog`, `--licenses` không mở cửa sổ nữa mà in nội dung ra terminal. Cửa sổ giới thiệu chỉ mở khi chạy không tham số (Start menu) hoặc từ menu khay; `capture-store-screenshots.ps1` chụp About bằng cách chạy không tham số.
+
 ## Giai đoạn 3 — Phát hành
 
 Kênh: Microsoft Store, WinGet, file tải trực tiếp từ GitHub. Cả ba dùng chung một gói MSIX đầy đủ; bản dev vẫn dùng sparse package.

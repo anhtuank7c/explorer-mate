@@ -105,19 +105,26 @@ void ShowDocument(HWND owner, const Document& document) {
 
 }  // namespace
 
+std::wstring ChangelogText() {
+    return ToPlainText(EmbeddedText(IDR_CHANGELOG), StartAt::FirstVersionHeading);
+}
+
+std::wstring LicensesText() {
+    const std::wstring license = ToPlainText(EmbeddedText(IDR_LICENSE), StartAt::Beginning);
+    const std::wstring notices = ToPlainText(EmbeddedText(IDR_NOTICES), StartAt::Beginning);
+    if (license.empty() || notices.empty()) {
+        return {};
+    }
+    return L"Explorer Mate\r\n\r\n" + license +
+           L"\r\n________________________________________\r\n\r\n" + notices;
+}
+
 void ShowChangelog(HWND owner) {
-    ShowDocument(owner, {L"What's new in Explorer Mate",
-                         ToPlainText(EmbeddedText(IDR_CHANGELOG), StartAt::FirstVersionHeading)});
+    ShowDocument(owner, {L"What's new in Explorer Mate", ChangelogText()});
 }
 
 void ShowLicenses(HWND owner) {
-    const std::wstring license = ToPlainText(EmbeddedText(IDR_LICENSE), StartAt::Beginning);
-    const std::wstring notices = ToPlainText(EmbeddedText(IDR_NOTICES), StartAt::Beginning);
-    ShowDocument(owner, {L"Explorer Mate licenses",
-                         (license.empty() || notices.empty())
-                             ? std::wstring()
-                             : L"Explorer Mate\r\n\r\n" + license +
-                                   L"\r\n________________________________________\r\n\r\n" + notices});
+    ShowDocument(owner, {L"Explorer Mate licenses", LicensesText()});
 }
 
 }  // namespace et::ui

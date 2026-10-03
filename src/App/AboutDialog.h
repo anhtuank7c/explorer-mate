@@ -1,9 +1,14 @@
 #pragma once
 
+#include <string>
+
 namespace et::ui {
 
 // Modal introduction window: what the program does, who wrote it and a link to the
 // author's website. Returns when the user closes it.
 void ShowAbout();
+
+// The same information as plain text, for the command line.
+std::wstring AboutText();
 
 }  // namespace et::ui

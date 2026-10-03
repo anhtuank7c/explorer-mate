@@ -178,10 +178,11 @@ flowchart LR
 
 | ID | Requirement | Verified by |
 |---|---|---|
-| FR-I1 | Starting the program with no arguments, `--about`, or "About…" in the tray menu shows the product name and version, a short description, the author, and links to the author's website, the source repository and its issue tracker. | manual; scripted read-back |
+| FR-I1 | Starting the program with no arguments, or "About…" in the tray menu, shows the product name and version, a short description, the author, and links to the author's website, the source repository and its issue tracker. | manual; scripted read-back |
 | FR-C5 | The installed package provides the command `explorermate` in any terminal. The terminal waits for it and shows its output. `--help` prints the command line. Item paths may be relative to the current folder; a trailing backslash is ignored. | scripted on a fixture; console screenshot |
-| FR-I2 | "What's new" in the introduction window or in the tray menu, or `--changelog`, shows the changelog that was embedded in the program at build time. | manual; screenshot |
-| FR-I3 | "Licenses" in the introduction window, or `--licenses`, shows the program's own license followed by the third-party notices, both embedded at build time. The same two files are shipped in the package. | manual; screenshot |
+| FR-C6 | `--about`, `--changelog` and `--licenses` print the content of the introduction, "What's new" and "Licenses" windows as text to the terminal (or to redirected output) and open no window. | scripted read-back |
+| FR-I2 | "What's new" in the introduction window or in the tray menu shows the changelog that was embedded in the program at build time. | manual; screenshot |
+| FR-I3 | "Licenses" in the introduction window shows the program's own license followed by the third-party notices, both embedded at build time. The same two files are shipped in the package. | manual; screenshot |
 | FR-I2 | The link opens the website in the default browser. | manual |
 
 ### 3.9 Command line

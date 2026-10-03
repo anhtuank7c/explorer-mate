@@ -39,7 +39,7 @@ bool TakesValue(const std::wstring& option) {
 domain::Result<Options> ParseOptions(const std::vector<std::wstring>& arguments) {
     Options options;
     // Started by double-click, with nothing to do: introduce the program instead.
-    options.showAbout = arguments.empty();
+    options.showIntroduction = arguments.empty();
     const auto pattern = [&]() -> domain::RenamePattern& {
         if (!options.renamePattern) {
             options.renamePattern = domain::RenamePattern{};
@@ -141,7 +141,7 @@ domain::Result<Options> ParseOptions(const std::vector<std::wstring>& arguments)
         }
     }
 
-    if (options.showHelp || options.showVersion || options.showAbout || options.showChangelog || options.showLicenses ||
+    if (options.showHelp || options.showVersion || options.showIntroduction || options.showAbout || options.showChangelog || options.showLicenses ||
         options.diagnoseExplorer || options.runAgent ||
         options.stopAgent) {
         return options;
@@ -183,9 +183,9 @@ std::wstring UsageText() {
            L"  --silent        no dialogs, no progress window, no undo record\n"
            L"  --version       print the version\n"
            L"  --help          print this text\n"
-           L"  --about         open the introduction window\n"
-           L"  --changelog     open the \"What's new\" window\n"
-           L"  --licenses      open the licenses window\n"
+           L"  --about         print what the program is, its author and links\n"
+           L"  --changelog     print what is new\n"
+           L"  --licenses      print the license and the third-party notices\n"
            L"  --agent         start the tray agent (keyboard shortcuts)\n"
            L"  --stop-agent    stop the tray agent\n"
            L"  --diagnose-explorer [--delay <seconds>] [--watch <seconds>]\n"
