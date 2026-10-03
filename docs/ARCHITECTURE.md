@@ -1,107 +1,405 @@
-# Kiến trúc ExplorerMate
+# Explorer Mate — Architecture
 
-## Luồng một lệnh
+What the product must do is in `docs/SRS.md`; this document explains how the code is organised to do it. Diagrams use Mermaid and render on GitHub.
 
-```text
-File Explorer
-   │  chuột phải → Invoke(IShellItemArray)
-   ▼
-DllHost.exe  ── ExplorerMate.Shell.dll (src/ShellExtension)
-   │  đọc đường dẫn, ghi %LOCALAPPDATA%\ExplorerMate\requests\<guid>.etreq
-   │  CreateProcess: ExplorerMate.exe --request <file>
-   ▼
-ExplorerMate.exe (src/App)
-   │  đọc + xóa request, validate lại, mở dialog nếu cần
-   ▼
-Use case (src/Application) ──port──> adapter Windows (src/Infrastructure) ──> IFileOperation
+## 1. Overview
+
+Explorer Mate ships two files that play three roles:
+
+| Binary | Role | Runs in |
+|---|---|---|
+| `ExplorerMate.Shell.dll` | Context-menu commands (`IExplorerCommand`). Hands the selection to a worker and returns. | `DllHost.exe` (COM surrogate with package identity) |
+| `ExplorerMate.exe --request <file>` | **Worker**: dialogs and file operations for one command. | Its own short-lived process |
+| `ExplorerMate.exe --agent` | **Agent**: tray icon, keyboard hook, settings. Hands the selection to a worker. | One long-lived process per session |
+
+The same EXE also has a direct command line (`--action …`), an introduction window (no arguments) and diagnostics.
+
+```mermaid
+flowchart TB
+    subgraph explorer_side["Started by Windows"]
+        explorer["File Explorer"]
+        dllhost["DllHost.exe<br/>ExplorerMate.Shell.dll"]
+    end
+    subgraph agent_side["Started by the user or at sign-in"]
+        agent["ExplorerMate.exe --agent<br/>tray icon + keyboard hook"]
+    end
+    request[("request file<br/>LOCALAPPDATA/ExplorerMate/requests")]
+    worker["ExplorerMate.exe --request<br/>dialogs + use case"]
+    shell["Windows shell<br/>IFileOperation"]
+
+    explorer -- "Invoke(selection)" --> dllhost
+    agent -- "reads focused tab's selection" --> explorer
+    dllhost -- writes --> request
+    agent -- writes --> request
+    dllhost -- CreateProcess --> worker
+    agent -- CreateProcess --> worker
+    request -- "read once, then deleted" --> worker
+    worker --> shell
 ```
 
-DLL không hiện dialog, không đụng filesystem ngoài request file. Mọi nghiệp vụ nằm trong EXE, nên lỗi hay crash không ảnh hưởng Explorer.
+Design consequences:
 
-## Các lớp
+- Nothing slow or interactive runs inside a process Windows owns. A crash in a worker cannot take Explorer down.
+- The menu path and the shortcut path converge on the same worker, so a command behaves identically however it was invoked.
+- The agent never touches files itself.
 
-| Lớp | Project | Namespace | Phụ thuộc được phép |
-|---|---|---|---|
-| Domain | `src/Domain` | `et::domain` | C++ standard library |
-| Application | `src/Application` | `et::app` | Domain |
-| Infrastructure | `src/Infrastructure` | `et::infra` | Application, Domain, Windows SDK |
-| Presentation | `src/App`, `src/ShellExtension` | `et::ui` | Tất cả |
+## 2. Layers
 
-`scripts\check-layers.ps1` quét `#include` và làm hỏng `test.ps1` nếu Domain/Application include header Windows hoặc lớp ngoài.
+Dependencies point inward only. `scripts/check-layers.ps1` scans `#include` lines and fails the test run when an inner layer includes a Windows header or an outer layer.
 
-### Domain
+```mermaid
+flowchart LR
+    subgraph presentation["Presentation (et::ui)"]
+        app["src/App<br/>ExplorerMate.exe"]
+        shellext["src/ShellExtension<br/>ExplorerMate.Shell.dll"]
+    end
+    infra["Infrastructure (et::infra)<br/>src/Infrastructure"]
+    application["Application (et::app)<br/>src/Application"]
+    domain["Domain (et::domain)<br/>src/Domain"]
 
-| Thành phần | Vai trò |
+    app --> infra
+    app --> application
+    shellext --> infra
+    shellext --> application
+    infra --> application
+    application --> domain
+    infra --> domain
+```
+
+| Layer | May include | Contains |
+|---|---|---|
+| Domain | C++ standard library | Value objects and pure rules |
+| Application | Domain | Use cases, ports (interfaces), request/settings formats, hotkey matching |
+| Infrastructure | Application, Domain, Windows SDK | Adapters that implement the ports with Win32/COM |
+| Presentation | Everything | Composition roots, dialogs, command line, COM command classes |
+
+### 2.1 Domain (`src/Domain`)
+
+| File | Responsibility |
 |---|---|
-| `Result<T>`, `Status`, `Error` | Trả lỗi không dùng exception |
-| `PathText`, `ItemName` | Tách đường dẫn/tên; luật đặt tên Windows |
-| `FolderName`, `Selection` | Value object đã validate |
-| `INameCollation` | "Cùng tên" và "thứ tự Explorer" do nền tảng quyết định, nên được tiêm vào |
-| `RenamePattern`, `RenamePlan` | Tính toàn bộ lô đổi tên trước khi mutate: đánh số, phát hiện trùng, sắp thứ tự bước, phá vòng bằng tên tạm |
-| `OperationReport` | Kết quả theo từng item: Succeeded / Failed / Skipped / NotAttempted |
+| `Result.h`, `Error.h` | `Result<T>` / `Status` for returning errors without exceptions |
+| `PathText` | Text-only helpers for drive-absolute paths |
+| `ItemName` | Splitting name/extension; Windows naming rules |
+| `FolderName`, `Selection` | Validated value objects |
+| `NameCollation` | `INameCollation`: what "same name" and "Explorer order" mean; a portable `SimpleNameCollation` |
+| `RenameMask` | Mask expansion (`[N]`, `[E]`, `[C]`, `[P]`, ranges, literal brackets) |
+| `RenamePlan` | Computes a whole rename batch: numbering, collision checks, step ordering, cycle breaking |
+| `OperationReport` | Per-item outcome of a batch |
+| `KeyChord` | Parsing, formatting and validating shortcuts |
+| `ProductInfo` | Display name, short name, version, author, website |
 
-### Application
+### 2.2 Application (`src/Application`)
 
-Use case: `GroupIntoNewFolderUseCase`, `BulkRenameUseCase`, `DuplicateInPlaceUseCase`. Mỗi cái nhận port qua constructor và có một phương thức `Execute(paths) → Result<OperationReport>`.
+Use cases, each with one `Execute(paths)` method returning `Result<OperationReport>`:
 
-| Port | Trách nhiệm | Adapter thật | Adapter test |
+- `GroupIntoNewFolderUseCase`
+- `BulkRenameUseCase`
+- `DuplicateInPlaceUseCase`
+
+Shared: `SelectionGuard` (the common precondition), `ActionKind`, `ActionRequest` (request format), `Settings`, `HotkeyMatcher`.
+
+Ports and their adapters:
+
+| Port | Responsibility | Production adapter | Test double |
 |---|---|---|---|
-| `IFileSystemProbe` | Hỏi filesystem (chỉ đọc) | `Win32FileSystemProbe` | `FakeFileSystem` |
-| `IFileOperationGateway` | Thay đổi filesystem, không ghi đè | `ShellFileOperationGateway` | `FakeFileSystem` |
-| `IUserPrompt` | Hỏi người dùng | `DialogPrompt`, `PresetPrompt` | `ScriptedPrompt` |
-| `ILogger` | Ghi log | `FileLogger` | — |
+| `IFileSystemProbe` | Read-only questions about the file system | `Win32FileSystemProbe` | `FakeFileSystem` |
+| `IFileOperationGateway` | Everything that changes the file system; never overwrites | `ShellFileOperationGateway` | `FakeFileSystem` |
+| `IUserPrompt` | Questions only the user can answer | `DialogPrompt`, `PresetPrompt` | `ScriptedPrompt` |
+| `ISelectionSource` | The selection of the focused Explorer tab | `ExplorerSelectionSource` | — |
+| `ILogger` | Diagnostics | `FileLogger` | — |
+| `INameCollation` (Domain) | Name equality and display order | `WindowsNameCollation` | `SimpleNameCollation`, `ReversedCollation` |
 
-Thêm một lệnh mới: một use case, một class trong `Commands.cpp`, một giá trị `ActionKind`, một nhánh trong `ActionRunner`, một CLSID trong manifest. Use case cũ không phải sửa.
+### 2.3 Infrastructure (`src/Infrastructure`)
 
-## Bảo đảm an toàn dữ liệu
+| File | Responsibility |
+|---|---|
+| `ShellFileOperationGateway` | `IFileOperation` + progress sink; per-item results; pre-checks rename targets |
+| `Win32FileSystemProbe`, `WindowsNameCollation` | File attributes, listings; `CompareStringOrdinal`, `StrCmpLogicalW` |
+| `ShellSelection` | `IShellItemArray` → file-system paths |
+| `RequestFileStore`, `WorkerProcess` | Writing/taking request files; starting a worker |
+| `ExplorerWindows`, `ExplorerSelectionSource` | Enumerating Explorer tabs; deciding which one a shortcut applies to |
+| `KeyboardHook` | `WH_KEYBOARD_LL` wrapper |
+| `SettingsFile`, `Autostart`, `AppDataPaths`, `FileLogger` | Persistence and logging |
+| `ComApartment`, `ErrorText`, `Utf8` | COM lifetime, error messages, encoding |
 
-- **Không ghi đè, không merge.** Copy dùng `FOF_RENAMEONCOLLISION`. Move chỉ vào folder do chính request tạo (`CreateDirectoryW` thất bại nếu tên đã tồn tại). Đổi tên: kế hoạch từ chối trùng với mục ngoài selection, và gateway kiểm tra lại đích ngay trước khi giao cho Shell.
-- **Không bao giờ dùng `FOF_NOCONFIRMATION`** — cờ này tự trả lời "có" cho câu hỏi ghi đè.
-- **Không tự rollback.** `IFileOperation` không phải transaction; kết quả dở dang được báo theo từng item. Dọn dẹp duy nhất là `RemoveDirectoryW` trên folder vừa tạo, vốn chỉ xóa được folder rỗng.
-- **Request không được tin.** EXE chỉ nhận file nằm trong thư mục `requests`, đuôi `.etreq`, giới hạn 64 MB, UTF-8 hợp lệ, đúng định dạng; sau đó use case validate lại selection với filesystem.
-- **Không qua shell lệnh.** Selection đi qua file; command line chỉ chứa đường dẫn request có tên là GUID.
+### 2.4 Presentation
 
-## COM
+`src/App` (EXE): `main.cpp` and `Options` (command line), `ActionRunner` (composition root for one request), `DialogPrompt`, `PresetPrompt`, `ReportPresenter`, `Agent`, `SettingsDialog`, `AboutDialog`, `ExplorerDiagnostics`, `App.rc`.
 
-- DLL: WRL `RuntimeClass<ClassicCom, IExplorerCommand>`, `ThreadingModel=STA`, chạy trong surrogate `DllHost.exe`. `GetTitle`/`GetState` không chạm ổ đĩa ngoài thuộc tính của tối đa 256 item.
-- EXE: một STA duy nhất (`ComApartment`, RAII) trên luồng chính; `IFileOperation::PerformOperations` tự bơm message.
-- Không exception nào vượt ranh giới COM: `Invoke` và progress sink bọc `try/catch`.
-- Tên/đích thực tế lấy từ `IFileOperationProgressSink::Post*Item`. Trả lỗi từ `PostRenameItem` hủy các thao tác còn lại — dùng để dừng chuỗi đổi tên ở lỗi đầu tiên.
+`src/ShellExtension` (DLL): `ExplorerCommandBase` (shared `IExplorerCommand` plumbing), `Commands.cpp` (the three command classes and their CLSIDs), `WorkerLauncher`, `ShellLog`.
 
-## Phím tắt (Giai đoạn 2)
+## 3. Sequence diagrams
 
-```text
-bàn phím ──WH_KEYBOARD_LL──> Agent (ExplorerMate.exe --agent, icon khay)
-                               │ HotkeyMatcher: đúng chord? focus ở file list?
-                               │ PostMessage cho chính nó (ra khỏi hook)
-                               ▼
-                             ExplorerSelectionSource: tab nào, selection gì
-                               ▼
-                             WorkerProcess: request file + ExplorerMate.exe --request
+### 3.1 Any command from the context menu
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Explorer as File Explorer
+    participant Dll as DllHost.exe<br/>ExplorerMate.Shell.dll
+    participant Store as Request file
+    participant Worker as ExplorerMate.exe (worker)
+
+    User->>Explorer: right-click selection
+    Explorer->>Dll: GetTitle / GetState (per command)
+    Note over Dll: no disk scans. Bulk rename hides<br/>itself if a folder is selected
+    Dll-->>Explorer: titles, enabled/hidden
+    User->>Explorer: choose a command
+    Explorer->>Dll: Invoke(IShellItemArray)
+    Dll->>Dll: read file-system paths
+    Dll->>Store: write guid.etreq (action + items)
+    Dll->>Worker: CreateProcess --request file
+    Dll-->>Explorer: S_OK (returns immediately)
+    Worker->>Store: read, validate, delete
+    Worker->>Worker: run the use case (3.2 to 3.4)
 ```
 
-Từ worker trở đi giống hệt đường menu. Agent không tự thao tác file.
+### 3.2 New folder with selection
 
-- **Trong hook chỉ có việc rẻ:** `HotkeyMatcher` (thuần, đã unit test) và `FocusIsInFileList` (vài lời gọi user32). COM, `IShellWindows`, khởi động tiến trình đều chạy sau, trên message loop.
-- **Xác định tab:** foreground là `CabinetWClass`; đúng một tab của frame đó đang hiện (cửa sổ `ShellTabWindowClass` đứng đầu); focus là `DirectUIHWND` con trực tiếp của `SHELLDLL_DefView` của chính tab đó. Lệch bất kỳ điểm nào thì từ chối — không bao giờ lấy "tab đầu tiên".
-- **Fail-closed:** modifier không bao giờ bị nuốt; phím giả lập bị bỏ qua; AltGr (Right Alt) không tính là Alt; khi worker còn chạy thì không chặn phím nào; khóa/đổi session thì xóa trạng thái phím đang giữ.
-- **Một agent mỗi session** (mutex `Local\ExplorerMate.Agent`). Settings ở `%LOCALAPPDATA%\ExplorerMate\settings.txt`; file hỏng thì chạy bằng mặc định và giữ nguyên file.
-- **Điểm yếu đã biết:** cửa sổ agent nhận thông điệp nội bộ "đã bấm phím tắt" từ bất kỳ tiến trình nào cùng người dùng. Thứ bị tác động vẫn chỉ là selection trong tab đang focus.
+```mermaid
+sequenceDiagram
+    actor User
+    participant UC as GroupIntoNewFolderUseCase
+    participant Probe as IFileSystemProbe
+    participant Prompt as IUserPrompt (DialogPrompt)
+    participant Gateway as IFileOperationGateway
+    participant Shell as Windows shell
 
-## ADR-1: Đóng gói bằng sparse package, đăng ký qua Developer Mode
+    UC->>UC: ValidateSelection (same parent, local, exists, no links)
+    UC->>Probe: ListNames(parent)
+    UC->>Prompt: AskFolderName("New Folder", validator)
+    loop on every keystroke
+        User->>Prompt: types
+        Prompt->>UC: validator(name)
+        UC-->>Prompt: ok, or the reason it is not
+    end
+    alt user cancels
+        Prompt-->>UC: nullopt
+        UC-->>UC: Error(Cancelled), nothing changed
+    else user confirms
+        Prompt-->>UC: name
+        UC->>UC: validate again (never trust the prompt)
+        UC->>Gateway: CreateNewFolder(parent\name)
+        Note over Gateway: CreateDirectoryW fails if the name exists,<br/>so success proves this request owns the folder
+        alt folder appeared in the meantime
+            Gateway-->>UC: Error(NameCollision), nothing moved
+        else created
+            UC->>Gateway: MoveItemsInto(selection, folder)
+            Gateway->>Shell: IFileOperation MoveItem per item, PerformOperations
+            Shell-->>Gateway: PostMoveItem per item
+            Gateway-->>UC: OperationReport
+            opt no item moved
+                UC->>Gateway: RemoveFolderIfEmpty(folder)
+            end
+        end
+    end
+```
 
-- **Bối cảnh:** menu chính của Windows 11 chỉ nhận `IExplorerCommand` từ ứng dụng có package identity.
-- **Quyết định:** Win32 + package with external location; đăng ký bằng `Add-AppxPackage -Register AppxManifest.xml -ExternalLocation <dir>` khi Developer Mode bật, không ký.
-- **Hệ quả:** không cần certificate cho máy dev. Phân phối cho máy khác sẽ cần package đã ký — chưa làm.
-- **Phải giữ:** `desktop6:FileSystemWriteVirtualization=disabled` + capability `unvirtualizedResources`, nếu không DLL và EXE nhìn thấy hai thư mục `%LOCALAPPDATA%` khác nhau.
+### 3.3 Bulk rename
 
-## ADR-2: Request file thay cho named pipe
+```mermaid
+sequenceDiagram
+    actor User
+    participant UC as BulkRenameUseCase
+    participant Probe as IFileSystemProbe
+    participant Plan as BuildRenamePlan (Domain)
+    participant Prompt as IUserPrompt (DialogPrompt)
+    participant Gateway as IFileOperationGateway
+    participant Shell as Windows shell
 
-- **Bối cảnh:** Giai đoạn 1 không có tiến trình thường trú.
-- **Quyết định:** DLL ghi file `.etreq` rồi khởi động EXE; định dạng dòng văn bản thay vì JSON vì tên file Windows không chứa xuống dòng.
-- **Hệ quả:** không cần IPC server, ACL pipe hay parser JSON. Giai đoạn 2 (hotkey) có thể thay `RequestFileStore` bằng pipe mà không sửa use case.
+    UC->>UC: ValidateSelection (files only)
+    UC->>Prompt: AskRenamePattern(defaults, previewer)
+    loop on every change in the dialog
+        Prompt->>UC: previewer(pattern)
+        UC->>Probe: ListNames(parent)
+        UC->>Plan: BuildRenamePlan(names, siblings, parent name, pattern)
+        Plan-->>UC: previews, or why the batch is not possible
+        UC-->>Prompt: old and new names, or the error (OK disabled)
+    end
+    User->>Prompt: OK
+    Prompt-->>UC: pattern
+    UC->>Probe: ListNames(parent), fresh
+    UC->>Plan: BuildRenamePlan(...)
+    Note over Plan: sort in Explorer order, expand masks,<br/>reject invalid, duplicate or occupied names,<br/>order steps so every target is free,<br/>park one file under a temporary name to break a cycle
+    Plan-->>UC: ordered steps
+    UC->>Gateway: RenameItems(parent, steps)
+    Gateway->>Gateway: re-check each target is free
+    Gateway->>Shell: IFileOperation RenameItem per step, PerformOperations
+    Shell-->>Gateway: PostRenameItem per item
+    Note over Gateway: a failed step returns an error from the sink,<br/>which cancels the remaining steps
+    Gateway-->>UC: OperationReport
+```
 
-## ADR-3: Chế độ Silent không ghi Undo
+### 3.4 Duplicate
 
-- **Quyết định:** `OperationUi::Silent` (test, script) bỏ `FOF_ALLOWUNDO | FOFX_ADDUNDORECORD`; `Interactive` (menu) có.
-- **Lý do:** thao tác của test không được chen vào Ctrl+Z của Explorer.
+```mermaid
+sequenceDiagram
+    participant UC as DuplicateInPlaceUseCase
+    participant Gateway as IFileOperationGateway
+    participant Shell as Windows shell
+
+    UC->>UC: ValidateSelection
+    UC->>Gateway: DuplicateItems(selection)
+    Gateway->>Shell: IFileOperation CopyItem(item, its own parent)<br/>with FOF_RENAMEONCOLLISION
+    Shell-->>Gateway: PostCopyItem(new item) per item
+    Note over Gateway: the copy's name is taken from the callback,<br/>never guessed
+    Gateway-->>UC: OperationReport with actual destinations
+```
+
+### 3.5 What the worker does around a use case
+
+```mermaid
+sequenceDiagram
+    participant Main as main.cpp
+    participant Options
+    participant Store as RequestFileStore
+    participant Runner as ActionRunner
+    participant UC as Use case
+    participant Presenter as ReportPresenter
+
+    Main->>Options: ParseOptions(argv)
+    alt started with --request
+        Main->>Store: Take(file)
+        Note over Store: must be inside the requests folder, .etreq,<br/>at most 64 MB, valid UTF-8, parseable. The file is deleted
+    else started with --action
+        Main->>Main: build the request from the arguments
+    end
+    Main->>Main: choose DialogPrompt, or PresetPrompt when<br/>answers were given or --silent
+    Main->>Runner: RunAction(request, prompt, Interactive or Silent)
+    Runner->>UC: Execute(items)
+    UC-->>Main: Result of OperationReport
+    alt cancelled
+        Main-->>Main: exit 3, no message
+    else error or incomplete
+        Main->>Presenter: ShowProblem (interactive only)
+        Main-->>Main: exit 1
+    else all succeeded
+        Main-->>Main: exit 0
+    end
+```
+
+### 3.6 A command from a keyboard shortcut
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Hook as KeyboardHook<br/>(inside the agent)
+    participant Matcher as HotkeyMatcher
+    participant Source as ExplorerSelectionSource
+    participant Agent as Agent window
+    participant Explorer as File Explorer
+    participant Worker as ExplorerMate.exe (worker)
+
+    User->>Hook: key down / up
+    Hook->>Matcher: OnKey(event, contextAccepts)
+    Note over Matcher: tracks modifiers itself, never swallows them,<br/>ignores injected keys, AltGr is not Alt
+    opt chord matches exactly
+        Matcher->>Source: FocusIsInFileList()
+        Note over Source: cheap window queries only.<br/>Foreground is CabinetWClass and focus is<br/>DirectUIHWND directly under SHELLDLL_DefView
+        Source-->>Matcher: yes or no
+    end
+    alt no match, wrong focus, shortcuts off, or a worker is running
+        Matcher-->>Hook: pass through
+        Hook-->>User: key reaches the application unchanged
+    else match in a file list
+        Matcher-->>Hook: swallow + action
+        Hook->>Agent: PostMessage(hotkey, action)
+        Note over Hook,Agent: the hook returns at once.<br/>COM work happens on the message loop
+        Agent->>Source: CaptureFocusedSelection()
+        Source->>Explorer: IShellWindows, every tab's frame, tab window, view, selection
+        Note over Source: exactly one tab of the foreground frame is shown,<br/>its view owns the focus, the folder is a real folder.<br/>Otherwise refuse
+        Source-->>Agent: paths, or a refusal (logged)
+        Agent->>Worker: WorkerProcess Start(request)
+        Note over Agent: same request file and worker as the menu path (3.1, 3.5)
+    end
+```
+
+### 3.7 Agent lifetime and settings
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Agent
+    participant File as SettingsFile
+    participant Dialog as SettingsDialog
+
+    User->>Agent: start (--agent, or at sign-in)
+    Agent->>Agent: take the single-instance mutex
+    alt another agent already runs
+        Agent-->>User: exit quietly
+    else first agent
+        Agent->>File: Load()
+        Note over File: missing file gives defaults. Unreadable file gives<br/>defaults for this session and is left untouched
+        Agent->>Agent: tray icon, keyboard hook, session notifications
+    end
+    User->>Agent: tray, Settings...
+    Agent->>Dialog: EditSettings(current)
+    Dialog->>Dialog: ValidateSettings on OK (chord rules, no duplicates)
+    Dialog-->>Agent: new settings, or cancelled
+    Agent->>File: Save() (write temp file, then rename)
+    Agent->>Agent: rebuild HotkeyMatcher
+    User->>Agent: tray Exit, or --stop-agent
+    Agent->>Agent: remove hook and tray icon, quit
+```
+
+## 4. Data-safety rules
+
+- **Never overwrite, never merge.** Copies use `FOF_RENAMEONCOLLISION`. Moves only go into a folder the same request created. Renames are rejected by the planner when a target is taken by an item outside the batch, and the gateway re-checks every target immediately before handing it to the shell.
+- **`FOF_NOCONFIRMATION` is never used.** It would answer "yes" to overwrite prompts. `FOF_SILENT | FOF_NOERRORUI` does not suppress the shell's "Replace or Skip" dialog, which is why the gateway pre-checks.
+- **No rollback.** `IFileOperation` is not transactional; a partial result is reported per item. The only cleanup is `RemoveDirectoryW` on the folder a group command just created, which can only remove an empty folder.
+- **Requests are untrusted.** The worker accepts a request file only from its own folder, validates format and size, and the use case re-validates the selection against the disk.
+- **No shell interpreter.** The selection travels in a file; the command line carries only the path of a GUID-named request file.
+
+## 5. COM and threading
+
+- The DLL uses WRL `RuntimeClass<ClassicCom, IExplorerCommand>`, `ThreadingModel=STA`.
+- The worker and the agent each run a single STA (`ComApartment`, RAII) on their main thread. `IFileOperation::PerformOperations` pumps messages itself.
+- `Invoke` and the progress sink wrap their bodies in `try/catch`; no exception crosses a COM boundary.
+- Actual destinations come from `IFileOperationProgressSink::Post*Item`. Returning an error from `PostRenameItem` cancels the operations still queued.
+- The keyboard hook runs on the agent's main thread and only calls `HotkeyMatcher` and a few `user32` functions.
+
+## 6. Packaging
+
+| Manifest | Used for | Notes |
+|---|---|---|
+| `packaging/AppxManifest.xml` | Development: sparse package `ExplorerMate.Dev` pointing at `build\install` | Needs `unvirtualizedResources` + `FileSystemWriteVirtualization=disabled`, otherwise the DLL's `%LOCALAPPDATA%` is redirected into the package and the worker cannot find the request file |
+| `packaging/release/AppxManifest.xml` | Release: full MSIX `ExplorerMate` with the binaries inside | Only `runFullTrust`; has a Start menu entry |
+
+The two packages register the same commands, so the install scripts refuse to register one while the other is present.
+
+## 7. Decisions
+
+### ADR-1: Package identity through a sparse package, registered with Developer Mode
+
+- **Context:** the Windows 11 context menu only accepts `IExplorerCommand` from apps with package identity.
+- **Decision:** Win32 binaries plus a package with external location, registered unsigned via `Add-AppxPackage -Register … -ExternalLocation` under Developer Mode.
+- **Consequence:** no certificate needed on a development machine. Distribution requires a signed package.
+
+### ADR-2: Request file instead of a named pipe
+
+- **Context:** the menu path has no resident process to talk to.
+- **Decision:** the caller writes a `.etreq` file and starts a worker. The format is line-based text because Windows file names cannot contain line breaks, so no JSON parser is needed.
+- **Consequence:** no IPC server or pipe ACLs. The agent reuses the same mechanism; nothing needs queueing because shortcuts are not intercepted while a worker runs.
+
+### ADR-3: Silent mode writes no undo records
+
+- **Decision:** `OperationUi::Silent` (tests, scripts) omits `FOF_ALLOWUNDO | FOFX_ADDUNDORECORD`; `Interactive` (menu, shortcuts) sets them.
+- **Reason:** test operations must not end up in Explorer's Ctrl+Z stack.
+
+### ADR-4: Identify the focused tab from window structure, and refuse when unsure
+
+- **Context:** several tabs share one frame window; the frame handle does not identify a tab.
+- **Decision:** the shown tab is the first `ShellTabWindowClass` child of the frame; the focus must be a `DirectUIHWND` directly under that tab's `SHELLDLL_DefView`. Verified with three tabs in one frame, two of them on the same folder with different selections.
+- **Consequence:** depends on Explorer's window class names; if a Windows update changes them, shortcuts stop working rather than act on the wrong files.
+
+### ADR-5: Version resources only in builds meant to be signed
+
+- **Context:** Smart App Control on the development machine blocked some unsigned builds, unpredictably from one build to the next.
+- **Decision:** the `VERSIONINFO` blocks are compiled only with `build.ps1 -EmbedVersionInfo`.
+- **Consequence:** in development builds Task Manager shows `ExplorerMate.exe` rather than "Explorer Mate". Whether the resources influence the verdict is not established.
+
+## 8. Known weak points
+
+- The agent's window accepts its internal "shortcut pressed" message from any process of the same user. What it acts on is still only the selection of the focused tab.
+- In a full MSIX install the autostart Run key will be virtualised; a package startup task is needed.
+- Data-folder consistency between DLL, worker and agent has been checked for the sparse package and a loosely registered full package, not for a signed `.msix` install.

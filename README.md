@@ -44,22 +44,6 @@ On macOS, Finder lets you select a few files and choose "New Folder with Selecti
 - Windows 11 x64 only. Windows 10 and ARM64 are not supported.
 - Compared with Total Commander's rename tool, date/time placeholders, case conversion, regular expressions and saved presets are not there yet.
 
-## Install (development build)
-
-Requirements: Windows 11 x64, Visual Studio 18 (toolset v145) with "Desktop development with C++" and the Windows 11 SDK, and **Developer Mode** turned on (Settings → System → For developers).
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Configuration All
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\test.ps1 -Configuration Release
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-dev.ps1 -StartAgent
-```
-
-Uninstall with `scripts\uninstall-dev.ps1`. The tests only create and delete files under `%TEMP%\ExplorerMate.Tests`.
-
-`scripts\package-msix.ps1` builds the release-style MSIX package (unsigned unless you pass a certificate).
-
-If **Smart App Control** is on, Windows may refuse to run an unsigned build ("An Application Control policy has blocked this file"). The verdict differs from one build to the next; rebuilding usually produces a binary that is accepted. Signed releases are not affected.
-
 ## Using it
 
 Select files or folders in File Explorer and right-click; Windows may group the three commands under "Explorer Mate". With the tray agent running, the shortcuts in the table above work while the file list has the keyboard focus. Click the tray icon to change shortcuts, toggle "Start with Windows" or exit.
@@ -74,13 +58,112 @@ ExplorerMate.exe --action rename --mask "Trip_[C]" D:\Photos\IMG_7.jpg D:\Photos
 
 If a command does nothing, check the logs in `%LOCALAPPDATA%\ExplorerMate\logs`.
 
-## How it is built
+## For developers
 
-C++20, native Win32 and COM, no .NET or Electron. The code follows a layered (Clean Architecture) layout: pure rules in `src/Domain`, use cases and ports in `src/Application`, Windows adapters in `src/Infrastructure`, and the menu DLL and EXE on top. A script fails the test run if an inner layer includes Windows headers. The more detailed documents in `docs/` are written in Vietnamese:
+Everything below is what you need to clone the project, run it and change it.
 
-- `docs/ARCHITECTURE.md` — layers, data-safety rules, design decisions
-- `docs/TEST_MATRIX.md` — what has been tested, how, and what has not
-- `docs/PROGRESS.md` — milestone log
+### Prerequisites
+
+- Windows 11 x64.
+- Visual Studio 18 with the "Desktop development with C++" workload (toolset **v145**) and the Windows 11 SDK. The C++ unit-test framework that ships with Visual Studio is used; nothing else needs installing.
+- **Developer Mode** on (Settings → System → For developers). The context menu needs a registered package, and unsigned packages can only be registered in Developer Mode.
+- Git, and Windows PowerShell 5.1 (included with Windows).
+
+A different Visual Studio version means changing `PlatformToolset` in `Directory.Build.props`.
+
+### Clone, build, test, run
+
+```powershell
+git clone https://github.com/anhtuank7c/explorer-mate.git
+cd explorer-mate
+
+# Build Debug and Release (x64)
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Configuration All
+
+# Layer check + build + all tests
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\test.ps1 -Configuration Debug
+
+# Register the context menu for your user and start the shortcut agent
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-dev.ps1 -StartAgent
+
+# Remove it again
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\uninstall-dev.ps1
+```
+
+You can also open `ExplorerMate.sln` in Visual Studio; tests show up in Test Explorer. After changing the DLL or EXE, run `install-dev.ps1` again so the menu uses the new binaries (it stops and restarts the agent for you).
+
+If **Smart App Control** is on, Windows may refuse to run an unsigned build ("An Application Control policy has blocked this file"). The verdict differs from one build to the next; deleting `build\obj\App` and rebuilding usually produces a binary that is accepted.
+
+### Project layout
+
+```text
+src/Domain/            pure rules, standard library only        (namespace et::domain)
+src/Application/       use cases and ports (interfaces)          (et::app)
+src/Infrastructure/    Win32/COM adapters implementing the ports (et::infra)
+src/App/               ExplorerMate.exe: dialogs, CLI, tray agent (et::ui)
+src/ShellExtension/    ExplorerMate.Shell.dll: context-menu commands
+tests/UnitTests/       Domain + Application, in-memory fakes, no disk access
+tests/IntegrationTests/ adapters against real files in %TEMP%\ExplorerMate.Tests
+packaging/             package manifests (development and release) and logos
+scripts/               build, test, install, packaging and probe scripts
+docs/                  specification, architecture, test matrix, progress log
+```
+
+Dependencies point inward only: `App`/`ShellExtension` → `Infrastructure` → `Application` → `Domain`. `scripts\check-layers.ps1` (run by `test.ps1`) fails when `Domain` or `Application` include a Windows header or an outer layer.
+
+| Document | Language | Content |
+|---|---|---|
+| [`docs/SRS.md`](docs/SRS.md) | English | Requirements with IDs and how each is verified |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | English | Processes, layers, sequence diagrams, safety rules, decisions |
+| [`docs/TEST_MATRIX.md`](docs/TEST_MATRIX.md) | Vietnamese | What has been tested, how, and what has not |
+| [`docs/PROGRESS.md`](docs/PROGRESS.md) | Vietnamese | Milestone log with measured Windows behaviour |
+
+### Tests and tools
+
+| What | How |
+|---|---|
+| Unit + integration tests | `scripts\test.ps1 -Configuration Debug` (`-NoBuild` to skip the build) |
+| Invoke a registered menu command without the GUI | `& .\scripts\probe-command.ps1 -Clsid <clsid> -Path <item1>,<item2>` (CLSIDs are in `packaging\AppxManifest.xml`) |
+| Drive a dialog without a person | `& .\scripts\probe-dialog.ps1 -Action group\|rename -Path <items> [-SetText @{<id>='text'}] [-Press ok]` |
+| Check tab and focus detection | `scripts\test-tab-detection.ps1` (opens and closes its own Explorer window) |
+| See what a shortcut would act on right now | `ExplorerMate.exe --diagnose-explorer \| Out-String` |
+| Build the release-style MSIX | `scripts\package-msix.ps1` (unsigned unless you pass a certificate) |
+
+The EXE is a GUI-subsystem program: in PowerShell, pipe it (`| Out-String`) to wait for it and see its output.
+
+### Debugging
+
+- Logs: `%LOCALAPPDATA%\ExplorerMate\logs\shell.log` (menu DLL) and `agent.log` (shortcuts; it records why a shortcut was refused).
+- The menu DLL runs in `DllHost.exe`, not in `explorer.exe`. To debug it, attach to the `DllHost.exe` whose command line contains one of the command CLSIDs.
+- The worker is the easiest thing to debug: start `ExplorerMate.exe --action …` under the debugger with test paths; add `--silent` to skip shell UI.
+- To reproduce a rename or naming bug, write a failing test in `tests/UnitTests` first; those rules have no Windows dependency.
+
+### Adding a command
+
+1. **Rules** — put pure logic in `src/Domain` with unit tests.
+2. **Action** — add a value to `ActionKind` and its wire name in `ActionKind.cpp`.
+3. **Use case** — add a class in `src/Application` with `Execute(paths)`. If it needs something from Windows, add a method to a port (or a new port), implement it in `src/Infrastructure` and in `tests/UnitTests/Fakes.h`.
+4. **Wiring** — add a case in `src/App/ActionRunner.cpp`.
+5. **Menu** — add a class in `src/ShellExtension/Commands.cpp` with a new CLSID, list it in both `packaging/AppxManifest.xml` and `packaging/release/AppxManifest.xml`, and add it to `ShellExtensionActivationTests.cpp`.
+6. **Shortcut** (optional) — add it to `Settings::Defaults()` and `kAllActions` in `Settings.cpp`, and to `SettingsDialog.cpp` plus the dialog in `App.rc`.
+7. **Project files** — new source files must be added to the matching `.vcxproj` by hand.
+
+Existing use cases do not need to change.
+
+### Conventions
+
+- `/std:c++20 /W4 /WX /permissive- /utf-8`, static CRT, x64 only. Shared settings live in `Directory.Build.props` and `Directory.Build.targets`, not in each project.
+- Include from the `src` root: `#include "Domain/Result.h"`.
+- Return errors with `et::domain::Result<T>`; no exception may cross a COM boundary.
+- RAII for every Windows/COM resource; no bare `new`/`delete`.
+- Never use `FOF_NOCONFIRMATION`, and never loosen the tab-selection gate in `ExplorerSelectionSource` — both exist to protect user files.
+- Do not name methods after `windows.h` macros (`CreateDirectory`, `MoveFile`, `CopyFile`, `DeleteFile`…).
+- Scripts must run on Windows PowerShell 5.1 and stay ASCII-only.
+- Tests may only touch files inside `%TEMP%\ExplorerMate.Tests`.
+
+### Contributing
+
+Issues and pull requests are welcome. Before opening a pull request, run `scripts\test.ps1` on both Debug and Release, add or update tests for the behaviour you changed, and say in the description what you tested by hand (the menu and shortcuts cannot be fully covered by automated tests).
 
 ## Credits
 
@@ -140,22 +223,6 @@ Trên macOS, Finder cho phép chọn vài file rồi bấm "New Folder with Sele
 - Chỉ hỗ trợ Windows 11 x64; không hỗ trợ Windows 10 và ARM64.
 - So với công cụ đổi tên của Total Commander, hiện chưa có placeholder ngày giờ, đổi hoa/thường, biểu thức chính quy và lưu mẫu đặt tên.
 
-## Cài đặt (bản phát triển)
-
-Yêu cầu: Windows 11 x64, Visual Studio 18 (toolset v145) với workload "Desktop development with C++" và Windows 11 SDK, và đã bật **Developer Mode** (Settings → System → For developers).
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Configuration All
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\test.ps1 -Configuration Release
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-dev.ps1 -StartAgent
-```
-
-Gỡ bằng `scripts\uninstall-dev.ps1`. Test chỉ tạo và xóa file trong `%TEMP%\ExplorerMate.Tests`.
-
-`scripts\package-msix.ps1` dựng gói MSIX kiểu phát hành (chưa ký, trừ khi bạn truyền chứng thư).
-
-Nếu máy bật **Smart App Control**, Windows có thể từ chối chạy bản build chưa ký ("An Application Control policy has blocked this file"). Phán quyết khác nhau giữa các lần build; build lại thường cho ra file được chấp nhận. Bản phát hành đã ký không bị ảnh hưởng.
-
 ## Cách dùng
 
 Chọn file hoặc thư mục trong File Explorer rồi bấm chuột phải; Windows có thể gom ba lệnh vào mục "Explorer Mate". Khi agent ở khay đang chạy, các phím tắt trong bảng trên hoạt động lúc danh sách file đang giữ con trỏ bàn phím. Bấm icon ở khay để đổi phím tắt, bật/tắt "Start with Windows" hoặc thoát.
@@ -170,13 +237,112 @@ ExplorerMate.exe --action rename --mask "DaLat_[C]" D:\Anh\IMG_7.jpg D:\Anh\IMG_
 
 Nếu bấm lệnh mà không có gì xảy ra, xem log trong `%LOCALAPPDATA%\ExplorerMate\logs`.
 
-## Công cụ được xây dựng thế nào
+## Dành cho developer
 
-C++20, Win32 và COM thuần, không dùng .NET hay Electron. Mã tổ chức theo lớp (Clean Architecture): luật thuần ở `src/Domain`, use case và port ở `src/Application`, adapter Windows ở `src/Infrastructure`, phía trên là DLL menu và EXE. Một script sẽ làm hỏng lượt test nếu lớp trong include header của Windows. Tài liệu chi tiết trong `docs/` viết bằng tiếng Việt:
+Phần dưới đây là những gì bạn cần để clone dự án, chạy và sửa đổi.
 
-- `docs/ARCHITECTURE.md` — các lớp, nguyên tắc an toàn dữ liệu, quyết định thiết kế
-- `docs/TEST_MATRIX.md` — đã kiểm thử gì, bằng cách nào, và những gì chưa kiểm
-- `docs/PROGRESS.md` — nhật ký theo milestone
+### Yêu cầu
+
+- Windows 11 x64.
+- Visual Studio 18 với workload "Desktop development with C++" (toolset **v145**) và Windows 11 SDK. Dự án dùng bộ unit test C++ đi kèm Visual Studio, không cần cài thêm gì.
+- Bật **Developer Mode** (Settings → System → For developers). Menu chuột phải cần một package đã đăng ký, và package chưa ký chỉ đăng ký được khi bật Developer Mode.
+- Git và Windows PowerShell 5.1 (có sẵn trong Windows).
+
+Nếu dùng phiên bản Visual Studio khác, đổi `PlatformToolset` trong `Directory.Build.props`.
+
+### Clone, build, test, chạy
+
+```powershell
+git clone https://github.com/anhtuank7c/explorer-mate.git
+cd explorer-mate
+
+# Build Debug và Release (x64)
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Configuration All
+
+# Kiểm tra lớp + build + toàn bộ test
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\test.ps1 -Configuration Debug
+
+# Đăng ký menu chuột phải cho tài khoản của bạn và bật agent phím tắt
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-dev.ps1 -StartAgent
+
+# Gỡ ra
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\uninstall-dev.ps1
+```
+
+Bạn cũng có thể mở `ExplorerMate.sln` bằng Visual Studio; test hiện trong Test Explorer. Sau khi sửa DLL hoặc EXE, chạy lại `install-dev.ps1` để menu dùng bản mới (script tự dừng và chạy lại agent).
+
+Nếu máy bật **Smart App Control**, Windows có thể từ chối chạy bản build chưa ký ("An Application Control policy has blocked this file"). Phán quyết khác nhau giữa các lần build; xóa `build\obj\App` rồi build lại thường cho ra file được chấp nhận.
+
+### Cấu trúc dự án
+
+```text
+src/Domain/            luật thuần, chỉ dùng thư viện chuẩn        (namespace et::domain)
+src/Application/       use case và port (interface)              (et::app)
+src/Infrastructure/    adapter Win32/COM hiện thực các port       (et::infra)
+src/App/               ExplorerMate.exe: dialog, CLI, agent ở khay (et::ui)
+src/ShellExtension/    ExplorerMate.Shell.dll: lệnh menu chuột phải
+tests/UnitTests/       Domain + Application, dùng fake trong bộ nhớ, không chạm ổ đĩa
+tests/IntegrationTests/ adapter chạy trên file thật trong %TEMP%\ExplorerMate.Tests
+packaging/             manifest package (bản dev và bản phát hành) và logo
+scripts/               script build, test, cài đặt, đóng gói và kiểm tra
+docs/                  đặc tả, kiến trúc, ma trận kiểm thử, nhật ký tiến độ
+```
+
+Phụ thuộc chỉ đi vào trong: `App`/`ShellExtension` → `Infrastructure` → `Application` → `Domain`. `scripts\check-layers.ps1` (được `test.ps1` gọi) báo lỗi khi `Domain` hoặc `Application` include header của Windows hay lớp ngoài.
+
+| Tài liệu | Ngôn ngữ | Nội dung |
+|---|---|---|
+| [`docs/SRS.md`](docs/SRS.md) | Tiếng Anh | Yêu cầu có mã định danh và cách kiểm chứng từng yêu cầu |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Tiếng Anh | Tiến trình, các lớp, sequence diagram, nguyên tắc an toàn, quyết định thiết kế |
+| [`docs/TEST_MATRIX.md`](docs/TEST_MATRIX.md) | Tiếng Việt | Đã kiểm thử gì, bằng cách nào, và những gì chưa kiểm |
+| [`docs/PROGRESS.md`](docs/PROGRESS.md) | Tiếng Việt | Nhật ký theo milestone, kèm hành vi Windows đã đo được |
+
+### Test và công cụ
+
+| Việc | Cách làm |
+|---|---|
+| Unit test + integration test | `scripts\test.ps1 -Configuration Debug` (thêm `-NoBuild` để bỏ qua build) |
+| Gọi một lệnh menu đã đăng ký mà không cần giao diện | `& .\scripts\probe-command.ps1 -Clsid <clsid> -Path <item1>,<item2>` (CLSID nằm trong `packaging\AppxManifest.xml`) |
+| Điều khiển dialog không cần người bấm | `& .\scripts\probe-dialog.ps1 -Action group\|rename -Path <items> [-SetText @{<id>='text'}] [-Press ok]` |
+| Kiểm tra nhận diện tab và focus | `scripts\test-tab-detection.ps1` (tự mở và đóng một cửa sổ Explorer riêng) |
+| Xem phím tắt lúc này sẽ tác động lên gì | `ExplorerMate.exe --diagnose-explorer \| Out-String` |
+| Dựng gói MSIX kiểu phát hành | `scripts\package-msix.ps1` (chưa ký, trừ khi truyền chứng thư) |
+
+EXE là chương trình GUI-subsystem: trong PowerShell phải đưa vào pipeline (`| Out-String`) thì mới chờ nó chạy xong và thấy output.
+
+### Gỡ lỗi
+
+- Log: `%LOCALAPPDATA%\ExplorerMate\logs\shell.log` (DLL menu) và `agent.log` (phím tắt; có ghi lý do một phím tắt bị từ chối).
+- DLL menu chạy trong `DllHost.exe`, không phải `explorer.exe`. Muốn debug thì attach vào `DllHost.exe` có dòng lệnh chứa một trong các CLSID của lệnh.
+- Worker dễ debug nhất: chạy `ExplorerMate.exe --action …` dưới debugger với đường dẫn thử; thêm `--silent` để bỏ giao diện của shell.
+- Với lỗi đổi tên hay đặt tên, hãy viết trước một test thất bại trong `tests/UnitTests`; các luật đó không phụ thuộc Windows.
+
+### Thêm một lệnh mới
+
+1. **Luật** — đặt logic thuần vào `src/Domain`, kèm unit test.
+2. **Action** — thêm giá trị vào `ActionKind` và tên truyền (wire name) trong `ActionKind.cpp`.
+3. **Use case** — thêm một class trong `src/Application` có `Execute(paths)`. Nếu cần gì từ Windows, thêm phương thức vào một port (hoặc port mới), hiện thực ở `src/Infrastructure` và ở `tests/UnitTests/Fakes.h`.
+4. **Nối dây** — thêm một nhánh trong `src/App/ActionRunner.cpp`.
+5. **Menu** — thêm một class trong `src/ShellExtension/Commands.cpp` với CLSID mới, khai báo trong cả `packaging/AppxManifest.xml` lẫn `packaging/release/AppxManifest.xml`, và thêm vào `ShellExtensionActivationTests.cpp`.
+6. **Phím tắt** (tùy chọn) — thêm vào `Settings::Defaults()` và `kAllActions` trong `Settings.cpp`, cùng `SettingsDialog.cpp` và dialog trong `App.rc`.
+7. **File project** — file nguồn mới phải được thêm thủ công vào `.vcxproj` tương ứng.
+
+Các use case có sẵn không phải sửa.
+
+### Quy ước
+
+- `/std:c++20 /W4 /WX /permissive- /utf-8`, static CRT, chỉ x64. Cấu hình chung nằm ở `Directory.Build.props` và `Directory.Build.targets`, không lặp trong từng project.
+- Include theo đường dẫn từ `src`: `#include "Domain/Result.h"`.
+- Trả lỗi bằng `et::domain::Result<T>`; không exception nào được vượt ranh giới COM.
+- RAII cho mọi tài nguyên Windows/COM; không `new`/`delete` trần.
+- Không bao giờ dùng `FOF_NOCONFIRMATION`, và không nới lỏng cổng chọn tab trong `ExplorerSelectionSource` — cả hai tồn tại để bảo vệ file của người dùng.
+- Không đặt tên phương thức trùng macro của `windows.h` (`CreateDirectory`, `MoveFile`, `CopyFile`, `DeleteFile`…).
+- Script phải chạy được trên Windows PowerShell 5.1 và chỉ dùng ký tự ASCII.
+- Test chỉ được đụng tới file trong `%TEMP%\ExplorerMate.Tests`.
+
+### Đóng góp
+
+Hoan nghênh issue và pull request. Trước khi mở pull request, hãy chạy `scripts\test.ps1` trên cả Debug và Release, thêm hoặc cập nhật test cho hành vi bạn thay đổi, và ghi trong mô tả những gì bạn đã thử bằng tay (menu và phím tắt không phủ hết được bằng test tự động).
 
 ## Ghi công
 

@@ -226,7 +226,7 @@ NOT RUN:
 - **Smart App Control** (đang bật trên máy dev) bắt đầu chặn một số file EXE chưa ký vừa build: 4 trong 9 file EXE build ra trong phiên này bị chặn, có và không có version resource, cả Debug lẫn Release; cùng mã nguồn build lại thì có bản qua có bản không. Phán quyết gắn với từng file (copy sang chỗ khác vẫn giữ nguyên). Chưa rõ có liên quan tới tên mới hay không; trước khi đổi tên chưa lần nào bị chặn. Ký bằng chứng thư được tin cậy là cách giải quyết thật sự.
 - Script cài/gỡ giờ bỏ qua lỗi khi EXE cũ bị chặn lúc gọi `--stop-agent`.
 - Bằng chứng: 107/107 test pass (Debug + Release); package loose `ExplorerMate_0.1.0.0_x64__jn0ge0denfdd8` đăng ký; Duplicate qua COM tạo `a - Copy.txt`; agent chạy với tên tiến trình `ExplorerMate.exe`; dữ liệu ở `%LOCALAPPDATA%\ExplorerMate`.
-- Còn lại của tên cũ trên máy: thư mục log `%LOCALAPPDATA%\ExplorerTools` và `%LOCALAPPDATA%\ExMate` (chưa xóa).
+- Còn lại của tên cũ trên máy: không còn gì: hai thư mục log cũ trong `%LOCALAPPDATA%` đã được xóa theo yêu cầu người dùng.
 
 ## Giai đoạn 3 — Phát hành
 
