@@ -41,7 +41,8 @@ On macOS, Finder lets you select a few files and choose "New Folder with Selecti
 - It only works on regular folders on local drives. Network paths, online-only OneDrive files, links/junctions, ZIP contents and the Recycle Bin are refused with a message.
 - All selected items must be in the same folder.
 - Bulk rename works on files, not folders.
-- Windows 11 x64 only. Windows 10 and ARM64 are not supported.
+- Windows 11 on x64 (Intel/AMD) only. Windows 10 is not supported.
+- **Windows on ARM is not supported.** There is no ARM64 build, and the maintainer has no ARM device to test one on. See [Help wanted: Windows on ARM](#help-wanted-windows-on-arm).
 - Compared with Total Commander's rename tool, date/time placeholders, case conversion, regular expressions and saved presets are not there yet.
 
 ## Using it
@@ -165,6 +166,17 @@ Existing use cases do not need to change.
 - Scripts must run on Windows PowerShell 5.1 and stay ASCII-only.
 - Tests may only touch files inside `%TEMP%\ExplorerMate.Tests`.
 
+### Help wanted: Windows on ARM
+
+Explorer Mate is only built and tested for x64. Supporting Windows on ARM needs someone with an ARM device, because the parts that matter most cannot be checked any other way. Nothing in the code is known to be x64-specific, so the work is expected to be mostly configuration and testing:
+
+- Add an ARM64 platform to `ExplorerMate.sln`, the projects and `Directory.Build.props`/`.targets` (CET, `/CETCOMPAT`, is x64-only and must be left out), and a platform parameter to the scripts.
+- Build an ARM64 MSIX (`ProcessorArchitecture="arm64"` in the manifests).
+- Add a CI job on GitHub's `windows-11-vs2026-arm` runner so the ARM64 build and tests run natively.
+- **On a real ARM device:** confirm the three commands appear in the context menu and work, the dialogs open in front, and the keyboard shortcuts act on the right tab (`scripts\test-tab-detection.ps1` checks the tab and focus detection, which depends on Explorer's window structure).
+
+If you can help, open an issue or a pull request and say which device and Windows build you tested on.
+
 ### Contributing
 
 Issues and pull requests are welcome. Before opening a pull request, run `scripts\test.ps1` on both Debug and Release, add or update tests for the behaviour you changed, and say in the description what you tested by hand (the menu and shortcuts cannot be fully covered by automated tests).
@@ -224,7 +236,8 @@ Trên macOS, Finder cho phép chọn vài file rồi bấm "New Folder with Sele
 - Chỉ hoạt động với thư mục thông thường trên ổ đĩa cục bộ. Đường dẫn mạng, file OneDrive chỉ-trên-mây, link/junction, nội dung ZIP và Recycle Bin bị từ chối kèm thông báo.
 - Các mục được chọn phải nằm chung một thư mục.
 - Bulk rename áp dụng cho file, không áp dụng cho thư mục.
-- Chỉ hỗ trợ Windows 11 x64; không hỗ trợ Windows 10 và ARM64.
+- Chỉ hỗ trợ Windows 11 trên máy x64 (Intel/AMD); không hỗ trợ Windows 10.
+- **Không hỗ trợ Windows trên ARM.** Dự án chưa có bản build ARM64, và tác giả không có thiết bị ARM để thử. Xem [Cần cộng đồng giúp: Windows trên ARM](#cần-cộng-đồng-giúp-windows-trên-arm).
 - So với công cụ đổi tên của Total Commander, hiện chưa có placeholder ngày giờ, đổi hoa/thường, biểu thức chính quy và lưu mẫu đặt tên.
 
 ## Cách dùng
@@ -347,6 +360,17 @@ Các use case có sẵn không phải sửa.
 - Không đặt tên phương thức trùng macro của `windows.h` (`CreateDirectory`, `MoveFile`, `CopyFile`, `DeleteFile`…).
 - Script phải chạy được trên Windows PowerShell 5.1 và chỉ dùng ký tự ASCII.
 - Test chỉ được đụng tới file trong `%TEMP%\ExplorerMate.Tests`.
+
+### Cần cộng đồng giúp: Windows trên ARM
+
+Explorer Mate hiện chỉ được build và kiểm thử cho x64. Để hỗ trợ Windows trên ARM cần một người có thiết bị ARM, vì những phần quan trọng nhất không kiểm tra được bằng cách nào khác. Trong mã nguồn chưa thấy chỗ nào gắn riêng với x64, nên công việc dự kiến chủ yếu là cấu hình và kiểm thử:
+
+- Thêm nền tảng ARM64 vào `ExplorerMate.sln`, các project và `Directory.Build.props`/`.targets` (CET, tức `/CETCOMPAT`, chỉ dành cho x64 nên phải bỏ), và thêm tham số nền tảng cho các script.
+- Dựng gói MSIX cho ARM64 (`ProcessorArchitecture="arm64"` trong manifest).
+- Thêm một job CI trên runner `windows-11-vs2026-arm` của GitHub để bản ARM64 được build và chạy test trực tiếp trên ARM.
+- **Trên thiết bị ARM thật:** xác nhận ba lệnh hiện trong menu chuột phải và chạy đúng, hộp thoại mở lên phía trước, và phím tắt tác động đúng tab (`scripts\test-tab-detection.ps1` kiểm tra việc nhận diện tab và focus, vốn phụ thuộc cấu trúc cửa sổ của Explorer).
+
+Nếu bạn giúp được, hãy mở issue hoặc pull request và cho biết thiết bị cùng bản Windows bạn đã thử.
 
 ### Đóng góp
 

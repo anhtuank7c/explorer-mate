@@ -19,7 +19,7 @@ In scope:
 - A tray agent with settings for the shortcuts.
 - A command line for the same commands.
 
-Out of scope: replacing File Explorer, file management beyond the three commands, network or cloud features, telemetry, Windows 10, ARM64.
+Out of scope: replacing File Explorer, file management beyond the three commands, network or cloud features, telemetry, Windows 10. Windows on ARM is not supported: there is no ARM64 build and no ARM device to test on; community help is wanted (see the README).
 
 ### 1.3 Definitions
 
