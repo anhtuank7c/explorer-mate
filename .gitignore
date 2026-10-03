@@ -1,0 +1,7 @@
+build/
+.vs/
+*.user
+*.aps
+TestResults/
+*.pfx
+*.pvk

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>18.0</VCProjectVersion>
+    <ProjectGuid>{285DE70F-D893-41E1-826C-88B3146BD115}</ProjectGuid>
+    <RootNamespace>IntegrationTests</RootNamespace>
+    <ProjectSubType>NativeUnitTestProject</ProjectSubType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <TargetName>ExMate.IntegrationTests</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(VCInstallDir)Auxiliary\VS\UnitTest\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalLibraryDirectories>$(VCInstallDir)Auxiliary\VS\UnitTest\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="ComApartmentTests.cpp" />
+    <ClCompile Include="FileLoggerTests.cpp" />
+    <ClCompile Include="RequestFileStoreTests.cpp" />
+    <ClCompile Include="ShellExtensionActivationTests.cpp" />
+    <ClCompile Include="ShellGatewayTests.cpp" />  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TempFixture.h" />
+    <ClInclude Include="TestSupport.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Build-order only: the activation test loads the DLL at run time. -->
+    <ProjectReference Include="..\..\src\ShellExtension\ShellExtension.vcxproj">
+      <Project>{07D0F1DE-746E-4C02-868B-6E1B7A7C76C5}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Infrastructure\Infrastructure.vcxproj">
+      <Project>{094E5B4D-071B-4C91-8054-B4EB22E685F4}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Application\Application.vcxproj">
+      <Project>{3A70E73C-EC8D-4527-AA18-3F1148617DB3}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Domain\Domain.vcxproj">
+      <Project>{D1BDD2B2-AA05-49ED-976C-44B1244590E8}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

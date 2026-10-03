@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>18.0</VCProjectVersion>
+    <ProjectGuid>{D1BDD2B2-AA05-49ED-976C-44B1244590E8}</ProjectGuid>
+    <RootNamespace>Domain</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ItemGroup>
+    <ClInclude Include="Error.h" />
+    <ClInclude Include="FolderName.h" />
+    <ClInclude Include="ItemName.h" />
+    <ClInclude Include="KeyChord.h" />
+    <ClInclude Include="NameCollation.h" />
+    <ClInclude Include="OperationReport.h" />
+    <ClInclude Include="PathText.h" />
+    <ClInclude Include="ProductInfo.h" />
+    <ClInclude Include="RenameMask.h" />
+    <ClInclude Include="RenamePlan.h" />
+    <ClInclude Include="Result.h" />
+    <ClInclude Include="Selection.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="FolderName.cpp" />
+    <ClCompile Include="ItemName.cpp" />
+    <ClCompile Include="KeyChord.cpp" />
+    <ClCompile Include="NameCollation.cpp" />
+    <ClCompile Include="OperationReport.cpp" />
+    <ClCompile Include="PathText.cpp" />
+    <ClCompile Include="ProductInfo.cpp" />
+    <ClCompile Include="RenameMask.cpp" />
+    <ClCompile Include="RenamePlan.cpp" />
+    <ClCompile Include="Selection.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

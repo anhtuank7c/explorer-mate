@@ -1,0 +1,94 @@
+#include <windows.h>
+#include <commctrl.h>
+
+#include "resource.h"
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDD_FOLDER_NAME DIALOGEX 0, 0, 260, 86
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "New folder with selection"
+FONT 9, "Segoe UI"
+BEGIN
+    LTEXT           "&Folder name:", IDC_STATIC, 8, 8, 244, 8
+    EDITTEXT        IDC_NAME, 8, 20, 244, 14, ES_AUTOHSCROLL
+    LTEXT           "", IDC_ERROR, 8, 38, 244, 20
+    DEFPUSHBUTTON   "OK", IDOK, 146, 64, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 202, 64, 50, 14
+END
+
+// Introduction window, shown when the program is started without arguments.
+// Title, author and link text are filled in at run time from Domain/ProductInfo.
+IDD_ABOUT DIALOGEX 0, 0, 290, 196
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About Explorer Mate"
+FONT 9, "Segoe UI"
+BEGIN
+    LTEXT           "", IDC_ABOUT_TITLE, 12, 10, 266, 10
+    LTEXT           "Extra commands for File Explorer on Windows 11.", IDC_STATIC, 12, 28, 266, 10
+    LTEXT           "-  New folder with selection: move the selected items into a new folder.", IDC_STATIC, 12, 44, 266, 10
+    LTEXT           "-  Bulk rename: rename many files at once with a name mask and a counter.", IDC_STATIC, 12, 56, 266, 10
+    LTEXT           "-  Duplicate: copy the selected items next to the originals.", IDC_STATIC, 12, 68, 266, 10
+    LTEXT           "How to use: select files or folders in File Explorer and right-click. With the tray agent running you can also press Ctrl+Alt+N, Ctrl+Alt+R or Ctrl+Alt+D in the file list; the shortcuts can be changed from the tray icon.", IDC_STATIC, 12, 86, 266, 36
+    LTEXT           "", IDC_ABOUT_AUTHOR, 12, 130, 266, 10
+    CONTROL         "", IDC_ABOUT_LINK, "SysLink", WS_TABSTOP, 12, 144, 266, 10
+    DEFPUSHBUTTON   "Close", IDOK, 228, 174, 50, 14
+END
+
+IDD_SETTINGS DIALOGEX 0, 0, 260, 152
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Explorer Mate settings"
+FONT 9, "Segoe UI"
+BEGIN
+    AUTOCHECKBOX    "&Enable keyboard shortcuts in File Explorer", IDC_HOTKEYS_ENABLED, 8, 8, 244, 10
+    LTEXT           "&New folder with selection:", IDC_STATIC, 8, 31, 112, 8
+    CONTROL         "", IDC_HOTKEY_GROUP, "msctls_hotkey32", WS_BORDER | WS_TABSTOP, 124, 28, 128, 14
+    LTEXT           "Bulk &rename:", IDC_STATIC, 8, 51, 112, 8
+    CONTROL         "", IDC_HOTKEY_RENAME, "msctls_hotkey32", WS_BORDER | WS_TABSTOP, 124, 48, 128, 14
+    LTEXT           "&Duplicate:", IDC_STATIC, 8, 71, 112, 8
+    CONTROL         "", IDC_HOTKEY_DUPLICATE, "msctls_hotkey32", WS_BORDER | WS_TABSTOP, 124, 68, 128, 14
+    LTEXT           "Click a box and press the new shortcut. Backspace clears it. Shortcuts only work while a File Explorer file list has the focus.", IDC_STATIC, 8, 90, 244, 18
+    LTEXT           "", IDC_ERROR, 8, 110, 244, 16
+    DEFPUSHBUTTON   "OK", IDOK, 146, 132, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 202, 132, 50, 14
+END
+
+// Laid out after Total Commander's Multi-Rename Tool: masks, counter, search and replace.
+IDD_BULK_RENAME DIALOGEX 0, 0, 380, 300
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Bulk rename"
+FONT 9, "Segoe UI"
+BEGIN
+    GROUPBOX        "Rename mask", IDC_STATIC, 8, 6, 364, 64
+    LTEXT           "File &name:", IDC_STATIC, 16, 21, 40, 8
+    EDITTEXT        IDC_NAME_MASK, 58, 18, 196, 14, ES_AUTOHSCROLL
+    LTEXT           "&Extension:", IDC_STATIC, 264, 21, 38, 8
+    EDITTEXT        IDC_EXTENSION_MASK, 304, 18, 60, 14, ES_AUTOHSCROLL
+    PUSHBUTTON      "[N] Name", IDC_INSERT_NAME, 58, 36, 46, 14
+    PUSHBUTTON      "[N#-#] Range", IDC_INSERT_RANGE, 108, 36, 54, 14
+    PUSHBUTTON      "[C] Counter", IDC_INSERT_COUNTER, 166, 36, 50, 14
+    PUSHBUTTON      "[P] Folder", IDC_INSERT_PARENT, 220, 36, 46, 14
+    LTEXT           "[N2-5] characters 2 to 5, [N3-] from character 3, [E] extension, [[] and []] brackets", IDC_STATIC, 16, 56, 350, 8
+
+    GROUPBOX        "Counter [C]", IDC_STATIC, 8, 74, 150, 50
+    LTEXT           "Start &at:", IDC_STATIC, 16, 89, 34, 8
+    EDITTEXT        IDC_START, 52, 86, 36, 14, ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "&Digits:", IDC_STATIC, 96, 89, 26, 8
+    EDITTEXT        IDC_DIGITS, 124, 86, 26, 14, ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Step &by:", IDC_STATIC, 16, 107, 34, 8
+    EDITTEXT        IDC_STEP, 52, 104, 36, 14, ES_AUTOHSCROLL | ES_NUMBER
+
+    GROUPBOX        "Search and replace", IDC_STATIC, 166, 74, 206, 50
+    LTEXT           "&Search for:", IDC_STATIC, 174, 89, 48, 8
+    EDITTEXT        IDC_SEARCH, 226, 86, 138, 14, ES_AUTOHSCROLL
+    LTEXT           "&Replace with:", IDC_STATIC, 174, 107, 48, 8
+    EDITTEXT        IDC_REPLACE, 226, 104, 138, 14, ES_AUTOHSCROLL
+
+    LTEXT           "Preview:", IDC_STATIC, 8, 130, 364, 8
+    CONTROL         "", IDC_PREVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 8, 142, 364, 112
+    LTEXT           "", IDC_ERROR, 8, 258, 364, 16
+    DEFPUSHBUTTON   "OK", IDOK, 266, 280, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 322, 280, 50, 14
+END

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sparse package (package with external location): grants package identity to the Win32
+     binaries so File Explorer shows the commands in the Windows 11 context menu. -->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
+  xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
+  xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+  IgnorableNamespaces="uap uap10 rescap desktop4 desktop5 desktop6 com">
+  <Identity
+    Name="ExMate.Dev"
+    Publisher="CN=ExMate Dev"
+    Version="0.1.0.0"
+    ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>Explorer Mate</DisplayName>
+    <PublisherDisplayName>ExMate Dev</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <uap10:AllowExternalContent>true</uap10:AllowExternalContent>
+    <!-- Without this, AppData writes from the COM surrogate are redirected into the package's
+         LocalCache, so the shell host and the unpackaged worker would not see the same files.
+         Requires the unvirtualizedResources capability below. -->
+    <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
+  </Properties>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22000.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="unvirtualizedResources" />
+  </Capabilities>
+  <Applications>
+    <Application
+      Id="ExMate"
+      Executable="ExMate.exe"
+      uap10:TrustLevel="mediumIL"
+      uap10:RuntimeBehavior="win32App">
+      <uap:VisualElements
+        AppListEntry="none"
+        DisplayName="Explorer Mate"
+        Description="Extra File Explorer commands"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png" />
+      <Extensions>
+        <desktop4:Extension Category="windows.fileExplorerContextMenus">
+          <desktop4:FileExplorerContextMenus>
+            <!-- CLSIDs must match src/ShellExtension/Commands.cpp. -->
+            <desktop5:ItemType Type="*">
+              <desktop5:Verb Id="ExMateGroup" Clsid="417C229C-5CC7-4258-B59A-608F3FC62D42" />
+              <desktop5:Verb Id="ExMateRename" Clsid="89086A14-49B8-4A64-B63E-92401D6652F8" />
+              <desktop5:Verb Id="ExMateDuplicate" Clsid="166CCB3B-AD13-4C03-8C5C-FB2DBFB9C73F" />
+            </desktop5:ItemType>
+            <desktop5:ItemType Type="Directory">
+              <desktop5:Verb Id="ExMateGroup" Clsid="417C229C-5CC7-4258-B59A-608F3FC62D42" />
+              <desktop5:Verb Id="ExMateDuplicate" Clsid="166CCB3B-AD13-4C03-8C5C-FB2DBFB9C73F" />
+            </desktop5:ItemType>
+          </desktop4:FileExplorerContextMenus>
+        </desktop4:Extension>
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:SurrogateServer DisplayName="Explorer Mate shell commands">
+              <com:Class Id="417C229C-5CC7-4258-B59A-608F3FC62D42" Path="ExMate.Shell.dll" ThreadingModel="STA" />
+              <com:Class Id="89086A14-49B8-4A64-B63E-92401D6652F8" Path="ExMate.Shell.dll" ThreadingModel="STA" />
+              <com:Class Id="166CCB3B-AD13-4C03-8C5C-FB2DBFB9C73F" Path="ExMate.Shell.dll" ThreadingModel="STA" />
+            </com:SurrogateServer>
+          </com:ComServer>
+        </com:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+</Package>

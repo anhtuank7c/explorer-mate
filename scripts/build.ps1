@@ -1,0 +1,17 @@
+[CmdletBinding()]
+param(
+    [ValidateSet('Debug', 'Release', 'All')]
+    [string]$Configuration = 'Debug'
+)
+
+. (Join-Path $PSScriptRoot 'Common.ps1')
+
+$msbuild = Get-MSBuildPath
+$solution = Join-Path $RepoRoot 'ExMate.sln'
+$configurations = if ($Configuration -eq 'All') { @('Debug', 'Release') } else { @($Configuration) }
+
+foreach ($config in $configurations) {
+    Write-Host "== Build $config|x64 =="
+    & $msbuild $solution /m /nologo /v:minimal "/p:Configuration=$config" /p:Platform=x64
+    if ($LASTEXITCODE -ne 0) { throw "Build failed: $config|x64 (exit code $LASTEXITCODE)" }
+}

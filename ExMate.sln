@@ -1,0 +1,58 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Domain", "src\Domain\Domain.vcxproj", "{D1BDD2B2-AA05-49ED-976C-44B1244590E8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Application", "src\Application\Application.vcxproj", "{3A70E73C-EC8D-4527-AA18-3F1148617DB3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Infrastructure", "src\Infrastructure\Infrastructure.vcxproj", "{094E5B4D-071B-4C91-8054-B4EB22E685F4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "App", "src\App\App.vcxproj", "{824A44C9-54B1-459C-890E-A9B3740BAA3F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ShellExtension", "src\ShellExtension\ShellExtension.vcxproj", "{07D0F1DE-746E-4C02-868B-6E1B7A7C76C5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTests", "tests\UnitTests\UnitTests.vcxproj", "{D5447D68-D09F-4F1C-B5C3-9638131404F3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IntegrationTests", "tests\IntegrationTests\IntegrationTests.vcxproj", "{285DE70F-D893-41E1-826C-88B3146BD115}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D1BDD2B2-AA05-49ED-976C-44B1244590E8}.Debug|x64.ActiveCfg = Debug|x64
+		{D1BDD2B2-AA05-49ED-976C-44B1244590E8}.Debug|x64.Build.0 = Debug|x64
+		{D1BDD2B2-AA05-49ED-976C-44B1244590E8}.Release|x64.ActiveCfg = Release|x64
+		{D1BDD2B2-AA05-49ED-976C-44B1244590E8}.Release|x64.Build.0 = Release|x64
+		{3A70E73C-EC8D-4527-AA18-3F1148617DB3}.Debug|x64.ActiveCfg = Debug|x64
+		{3A70E73C-EC8D-4527-AA18-3F1148617DB3}.Debug|x64.Build.0 = Debug|x64
+		{3A70E73C-EC8D-4527-AA18-3F1148617DB3}.Release|x64.ActiveCfg = Release|x64
+		{3A70E73C-EC8D-4527-AA18-3F1148617DB3}.Release|x64.Build.0 = Release|x64
+		{094E5B4D-071B-4C91-8054-B4EB22E685F4}.Debug|x64.ActiveCfg = Debug|x64
+		{094E5B4D-071B-4C91-8054-B4EB22E685F4}.Debug|x64.Build.0 = Debug|x64
+		{094E5B4D-071B-4C91-8054-B4EB22E685F4}.Release|x64.ActiveCfg = Release|x64
+		{094E5B4D-071B-4C91-8054-B4EB22E685F4}.Release|x64.Build.0 = Release|x64
+		{824A44C9-54B1-459C-890E-A9B3740BAA3F}.Debug|x64.ActiveCfg = Debug|x64
+		{824A44C9-54B1-459C-890E-A9B3740BAA3F}.Debug|x64.Build.0 = Debug|x64
+		{824A44C9-54B1-459C-890E-A9B3740BAA3F}.Release|x64.ActiveCfg = Release|x64
+		{824A44C9-54B1-459C-890E-A9B3740BAA3F}.Release|x64.Build.0 = Release|x64
+		{07D0F1DE-746E-4C02-868B-6E1B7A7C76C5}.Debug|x64.ActiveCfg = Debug|x64
+		{07D0F1DE-746E-4C02-868B-6E1B7A7C76C5}.Debug|x64.Build.0 = Debug|x64
+		{07D0F1DE-746E-4C02-868B-6E1B7A7C76C5}.Release|x64.ActiveCfg = Release|x64
+		{07D0F1DE-746E-4C02-868B-6E1B7A7C76C5}.Release|x64.Build.0 = Release|x64
+		{D5447D68-D09F-4F1C-B5C3-9638131404F3}.Debug|x64.ActiveCfg = Debug|x64
+		{D5447D68-D09F-4F1C-B5C3-9638131404F3}.Debug|x64.Build.0 = Debug|x64
+		{D5447D68-D09F-4F1C-B5C3-9638131404F3}.Release|x64.ActiveCfg = Release|x64
+		{D5447D68-D09F-4F1C-B5C3-9638131404F3}.Release|x64.Build.0 = Release|x64
+		{285DE70F-D893-41E1-826C-88B3146BD115}.Debug|x64.ActiveCfg = Debug|x64
+		{285DE70F-D893-41E1-826C-88B3146BD115}.Debug|x64.Build.0 = Debug|x64
+		{285DE70F-D893-41E1-826C-88B3146BD115}.Release|x64.ActiveCfg = Release|x64
+		{285DE70F-D893-41E1-826C-88B3146BD115}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
