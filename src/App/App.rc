@@ -26,11 +26,13 @@ END
 
 // Introduction window, shown when the program is started without arguments.
 // Title, author and link text are filled in at run time from Domain/ProductInfo.
+// The Close button comes first so it, not the first link, has the focus when the window opens.
 IDD_ABOUT DIALOGEX 0, 0, 290, 222
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About Explorer Mate"
 FONT 9, "Segoe UI"
 BEGIN
+    DEFPUSHBUTTON   "Close", IDOK, 228, 200, 50, 14
     ICON            IDI_APP, IDC_STATIC, 12, 6, 20, 20
     LTEXT           "", IDC_ABOUT_TITLE, 40, 12, 238, 10
     LTEXT           "Extra commands for File Explorer on Windows 11.", IDC_STATIC, 12, 30, 266, 10
@@ -44,7 +46,6 @@ BEGIN
     CONTROL         "", IDC_ABOUT_ISSUES, "SysLink", WS_TABSTOP, 12, 172, 266, 10
     PUSHBUTTON      "&What's new", IDC_ABOUT_CHANGELOG, 12, 200, 60, 14
     PUSHBUTTON      "&Licenses", IDC_ABOUT_LICENSES, 78, 200, 60, 14
-    DEFPUSHBUTTON   "Close", IDOK, 228, 200, 50, 14
 END
 
 // Shows an embedded document; the caption is set at run time. The Close button comes first

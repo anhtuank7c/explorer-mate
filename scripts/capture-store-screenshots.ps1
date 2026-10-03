@@ -90,6 +90,19 @@ Set-Content (Join-Path $demo 'Packing list.txt') 'Jacket, camera, charger.'
 $photos = @(Get-ChildItem $demo -Filter 'IMG_*.jpg' | Sort-Object Name | ForEach-Object FullName)
 
 # --- Capture -------------------------------------------------------------------------------
+# How much of a captured dialog is drawn: the number of sampled pixels that differ from the
+# dialog background, taken from just inside its bottom-left corner.
+function Get-DrawnScore([System.Drawing.Bitmap]$Bitmap) {
+    $background = $Bitmap.GetPixel(24, $Bitmap.Height - 24).ToArgb()
+    $score = 0
+    for ($y = 0; $y -lt $Bitmap.Height; $y += 4) {
+        for ($x = 0; $x -lt $Bitmap.Width; $x += 4) {
+            if ($Bitmap.GetPixel($x, $y).ToArgb() -ne $background) { $score++ }
+        }
+    }
+    return $score
+}
+
 # Starts the worker with a dialog, optionally types into controls, captures the dialog and
 # cancels it. Nothing on disk changes.
 function Get-DialogCapture([string[]]$Arguments, [hashtable]$SetText = @{}) {
@@ -107,9 +120,18 @@ function Get-DialogCapture([string[]]$Arguments, [hashtable]$SetText = @{}) {
 
     $outer = New-Object StoreShot+RECT; [void][StoreShot]::GetWindowRect($dialog, [ref]$outer)
     $visible = [StoreShot]::VisibleBounds($dialog)
-    $full = New-Object System.Drawing.Bitmap ($outer.Right - $outer.Left), ($outer.Bottom - $outer.Top)
-    $graphics = [System.Drawing.Graphics]::FromImage($full)
-    $dc = $graphics.GetHdc(); [void][StoreShot]::PrintWindow($dialog, $dc, 2); $graphics.ReleaseHdc($dc); $graphics.Dispose()
+    # PrintWindow sometimes returns a dialog with part of its controls not drawn yet (seen on
+    # the About window while the window on screen was complete). Take several captures and
+    # keep the one with the most drawn content.
+    $full = $null; $bestScore = -1
+    foreach ($attempt in 1..4) {
+        $candidate = New-Object System.Drawing.Bitmap ($outer.Right - $outer.Left), ($outer.Bottom - $outer.Top)
+        $graphics = [System.Drawing.Graphics]::FromImage($candidate)
+        $dc = $graphics.GetHdc(); [void][StoreShot]::PrintWindow($dialog, $dc, 2); $graphics.ReleaseHdc($dc); $graphics.Dispose()
+        $score = Get-DrawnScore $candidate
+        if ($score -gt $bestScore) { if ($full) { $full.Dispose() }; $full = $candidate; $bestScore = $score } else { $candidate.Dispose() }
+        Start-Sleep -Milliseconds 300
+    }
     # PrintWindow paints the window's one-pixel frame black; leave it out.
     $frame = 2
     $crop = New-Object System.Drawing.Rectangle ($visible.Left - $outer.Left + $frame), ($visible.Top - $outer.Top), ($visible.Right - $visible.Left - 2 * $frame), ($visible.Bottom - $visible.Top - $frame)
