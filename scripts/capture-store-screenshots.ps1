@@ -8,7 +8,11 @@
 # The context menu and the tray menu only appear on a real click; capture those by hand in
 # the demo folder (Win+Shift+S) - see docs\RELEASING.md.
 [CmdletBinding()]
-param([ValidateSet('Debug', 'Release')][string]$Configuration = 'Release')
+param(
+    [ValidateSet('Debug', 'Release')][string]$Configuration = 'Release',
+    # Which screenshots to make again; the others are left as they are.
+    [ValidateSet('rename', 'group', 'about')][string[]]$Only = @('rename', 'group', 'about')
+)
 
 . (Join-Path $PSScriptRoot 'Common.ps1')
 Add-Type -AssemblyName System.Drawing
@@ -148,13 +152,19 @@ function Save-StoreScreenshot([System.Drawing.Bitmap]$Capture, [string]$Caption,
     Write-Host "Wrote $FileName"
 }
 
-$rename = Get-DialogCapture (@('--action', 'rename') + $photos) @{ 1003 = 'Da Lat [C]' }
-Save-StoreScreenshot $rename 'Rename many files at once' 'Name masks, a counter, search and replace - with a live preview before anything changes' '02-bulk-rename.png'
+if ($Only -contains 'rename') {
+    $rename = Get-DialogCapture (@('--action', 'rename') + $photos) @{ 1003 = 'Da Lat [C]' }
+    Save-StoreScreenshot $rename 'Rename many files at once' 'Name masks, a counter, search and replace - with a live preview before anything changes' '02-bulk-rename.png'
+}
 
-$group = Get-DialogCapture (@('--action', 'group') + $photos[0..3]) @{ 1001 = 'Day 1 - Flower garden' }
-Save-StoreScreenshot $group 'New folder with selection' 'Select files, name the folder, and they move into it' '03-new-folder.png'
+if ($Only -contains 'group') {
+    $group = Get-DialogCapture (@('--action', 'group') + $photos[0..3]) @{ 1001 = 'Day 1 - Flower garden' }
+    Save-StoreScreenshot $group 'New folder with selection' 'Select files, name the folder, and they move into it' '03-new-folder.png'
+}
 
-$about = Get-DialogCapture @('--about')
-Save-StoreScreenshot $about 'Three commands, right where you work' 'In the right-click menu of File Explorer, and as keyboard shortcuts' '04-about.png'
+if ($Only -contains 'about') {
+    $about = Get-DialogCapture @('--about')
+    Save-StoreScreenshot $about 'Three commands, right where you work' 'In the right-click menu of File Explorer, and as keyboard shortcuts' '04-about.png'
+}
 
 Write-Host "Demo folder for the hand-made captures: $demo"
