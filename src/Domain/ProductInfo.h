@@ -15,5 +15,8 @@ std::wstring_view ProductVersion();
 std::wstring_view ProductAuthor();
 std::wstring_view ProductWebsiteUrl();    // Full URL opened by the link.
 std::wstring_view ProductWebsiteLabel();  // Text the link shows.
+std::wstring_view ProductRepositoryUrl();    // Source code.
+std::wstring_view ProductRepositoryLabel();
+std::wstring_view ProductIssuesUrl();        // Where problems are reported.
 
 }  // namespace et::domain

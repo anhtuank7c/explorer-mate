@@ -20,7 +20,7 @@ std::wstring_view ProductVersion() {
 }
 
 std::wstring_view ProductAuthor() {
-    return L"Tuan Nguyen";
+    return L"Tuan Nguyen (anhtuank7c)";
 }
 
 std::wstring_view ProductWebsiteUrl() {
@@ -29,6 +29,18 @@ std::wstring_view ProductWebsiteUrl() {
 
 std::wstring_view ProductWebsiteLabel() {
     return L"meohamhoc.vn";
+}
+
+std::wstring_view ProductRepositoryUrl() {
+    return L"https://github.com/anhtuank7c/explorer-mate";
+}
+
+std::wstring_view ProductRepositoryLabel() {
+    return L"github.com/anhtuank7c/explorer-mate";
+}
+
+std::wstring_view ProductIssuesUrl() {
+    return L"https://github.com/anhtuank7c/explorer-mate/issues";
 }
 
 }  // namespace et::domain

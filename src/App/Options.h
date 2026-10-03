@@ -30,6 +30,7 @@ namespace et::ui {
 struct Options {
     bool showVersion = false;
     bool showAbout = false;
+    bool showChangelog = false;
     bool runAgent = false;
     bool stopAgent = false;
     bool diagnoseExplorer = false;

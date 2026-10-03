@@ -31,6 +31,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AboutDialog.h" />
+    <ClInclude Include="ChangelogDialog.h" />
     <ClInclude Include="ActionRunner.h" />
     <ClInclude Include="AppIcon.h" />
     <ClInclude Include="Agent.h" />
@@ -51,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AboutDialog.cpp" />
+    <ClCompile Include="ChangelogDialog.cpp" />
     <ClCompile Include="ActionRunner.cpp" />
     <ClCompile Include="AppIcon.cpp" />
     <ClCompile Include="Agent.cpp" />

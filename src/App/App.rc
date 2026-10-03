@@ -26,7 +26,7 @@ END
 
 // Introduction window, shown when the program is started without arguments.
 // Title, author and link text are filled in at run time from Domain/ProductInfo.
-IDD_ABOUT DIALOGEX 0, 0, 290, 196
+IDD_ABOUT DIALOGEX 0, 0, 290, 222
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About Explorer Mate"
 FONT 9, "Segoe UI"
@@ -40,8 +40,23 @@ BEGIN
     LTEXT           "How to use: select files or folders in File Explorer and right-click. With the tray agent running you can also press Ctrl+Alt+N, Ctrl+Alt+R or Ctrl+Alt+D in the file list; the shortcuts can be changed from the tray icon.", IDC_STATIC, 12, 86, 266, 36
     LTEXT           "", IDC_ABOUT_AUTHOR, 12, 130, 266, 10
     CONTROL         "", IDC_ABOUT_LINK, "SysLink", WS_TABSTOP, 12, 144, 266, 10
-    DEFPUSHBUTTON   "Close", IDOK, 228, 174, 50, 14
+    CONTROL         "", IDC_ABOUT_REPOSITORY, "SysLink", WS_TABSTOP, 12, 158, 266, 10
+    CONTROL         "", IDC_ABOUT_ISSUES, "SysLink", WS_TABSTOP, 12, 172, 266, 10
+    PUSHBUTTON      "&What's new", IDC_ABOUT_CHANGELOG, 12, 200, 60, 14
+    DEFPUSHBUTTON   "Close", IDOK, 228, 200, 50, 14
 END
+
+// Shows CHANGELOG.md. The Close button comes first so it, not the text, has the focus.
+IDD_CHANGELOG DIALOGEX 0, 0, 340, 260
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "What's new in Explorer Mate"
+FONT 9, "Segoe UI"
+BEGIN
+    DEFPUSHBUTTON   "Close", IDOK, 282, 240, 50, 14
+    EDITTEXT        IDC_CHANGELOG_TEXT, 8, 8, 324, 226, ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL | WS_TABSTOP
+END
+
+IDR_CHANGELOG RCDATA "../../CHANGELOG.md"
 
 IDD_SETTINGS DIALOGEX 0, 0, 260, 152
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU

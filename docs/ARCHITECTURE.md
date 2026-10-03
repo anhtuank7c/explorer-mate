@@ -124,7 +124,7 @@ Ports and their adapters:
 
 ### 2.4 Presentation
 
-`src/App` (EXE): `main.cpp` and `Options` (command line), `ActionRunner` (composition root for one request), `DialogPrompt`, `PresetPrompt`, `ReportPresenter`, `Agent`, `SettingsDialog`, `AboutDialog`, `ExplorerDiagnostics`, `App.rc`.
+`src/App` (EXE): `main.cpp` and `Options` (command line), `ActionRunner` (composition root for one request), `DialogPrompt`, `PresetPrompt`, `ReportPresenter`, `Agent`, `SettingsDialog`, `AboutDialog`, `ChangelogDialog` (shows `CHANGELOG.md`, embedded as a resource), `ExplorerDiagnostics`, `App.rc`.
 
 `src/ShellExtension` (DLL): `ExplorerCommandBase` (shared `IExplorerCommand` plumbing), `Commands.cpp` (the three command classes and their CLSIDs), `WorkerLauncher`, `ShellLog`.
 

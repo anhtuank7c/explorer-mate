@@ -306,6 +306,12 @@ Chưa làm / để lại:
 - `--diagnose-explorer` in thêm `captureMs`, `items` và `enumerateAllMs`.
 - Ghi nhận: phép đo phụ thuộc cửa sổ mới mở có nhận focus hay không; nhiều lần chạy bị từ chối vì focus không nằm trong file list (khi đó `captureMs=0`, không dùng được). `test-tab-detection.ps1` để lại 2 tab chưa đóng sau khi chạy trên build 26300; đã đóng tay, chưa sửa script.
 
+## Cửa sổ giới thiệu và changelog (03/10/2026)
+
+- About: tác giả hiển thị "Tuan Nguyen (anhtuank7c)"; thêm liên kết mã nguồn (`github.com/anhtuank7c/explorer-mate`) và báo lỗi (`/issues`); thêm nút "What's new".
+- Cửa sổ "What's new" (`ChangelogDialog`, cũng mở được bằng `--changelog`) hiển thị `CHANGELOG.md` được nhúng vào EXE lúc build (RCDATA), chuyển Markdown sang văn bản thường.
+- Đã chụp cả hai cửa sổ để kiểm tra bố cục. NOT RUN: bấm thử các liên kết (sẽ mở trình duyệt); ảnh Store `04-about.png` chưa chụp lại.
+
 ## Giai đoạn 3 — Phát hành
 
 Kênh: Microsoft Store, WinGet, file tải trực tiếp từ GitHub. Cả ba dùng chung một gói MSIX đầy đủ; bản dev vẫn dùng sparse package.
