@@ -1,4 +1,4 @@
-# Activates a registered ExMate command through COM, the way File Explorer does, and
+# Activates a registered ExplorerMate command through COM, the way File Explorer does, and
 # calls Invoke on the given items. Lets the packaged activation path be tested without the GUI.
 [CmdletBinding()]
 param(

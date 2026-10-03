@@ -4,7 +4,7 @@
 
 namespace et::ui {
 
-// Process-wide logger of the shell extension: %LOCALAPPDATA%\ExMate\logs\shell.log.
+// Process-wide logger of the shell extension: %LOCALAPPDATA%\ExplorerMate\logs\shell.log.
 app::ILogger& ShellLog();
 
 }  // namespace et::ui

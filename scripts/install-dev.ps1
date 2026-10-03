@@ -1,5 +1,5 @@
 # Registers the development sparse package for the current user. Requires Developer Mode
-# because the package is not signed. Only touches the ExMate.Dev package identity.
+# because the package is not signed. Only touches the ExplorerMate.Dev package identity.
 [CmdletBinding()]
 param(
     [ValidateSet('Debug', 'Release')]
@@ -10,10 +10,10 @@ param(
 
 . (Join-Path $PSScriptRoot 'Common.ps1')
 
-$PackageName = 'ExMate.Dev'
+$PackageName = 'ExplorerMate.Dev'
 $binDir = Join-Path $RepoRoot "build\x64\$Configuration"
 $stageDir = Join-Path $RepoRoot 'build\install'
-$binaries = @('ExMate.exe', 'ExMate.Shell.dll')
+$binaries = @('ExplorerMate.exe', 'ExplorerMate.Shell.dll')
 
 function Test-DeveloperMode {
     $key = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' -ErrorAction SilentlyContinue
@@ -22,8 +22,8 @@ function Test-DeveloperMode {
         ($key.AllowDevelopmentWithoutDevLicense -eq 1)
 }
 
-if (Get-AppxPackage -Name 'ExMate') {
-    throw 'The release-style package "ExMate" is registered (scripts\package-msix.ps1 -RegisterLoose). Both packages would add the same menu commands twice. Remove it first: Get-AppxPackage -Name ExMate | Remove-AppxPackage'
+if (Get-AppxPackage -Name 'ExplorerMate') {
+    throw 'The release-style package "ExplorerMate" is registered (scripts\package-msix.ps1 -RegisterLoose). Both packages would add the same menu commands twice. Remove it first: Get-AppxPackage -Name ExplorerMate | Remove-AppxPackage'
 }
 
 if (-not (Test-DeveloperMode)) {
@@ -39,10 +39,11 @@ foreach ($name in $binaries) {
 # A running agent keeps the staged EXE locked; ask it to exit and remember to bring it back.
 # This must come before the package is removed: removal closes the agent by itself, and it
 # would then look as if no agent had been running.
-$stagedExe = Join-Path $stageDir 'ExMate.exe'
+$stagedExe = Join-Path $stageDir 'ExplorerMate.exe'
 $agentWasRunning = $false
 if (Test-Path $stagedExe) {
-    $agentWasRunning = (& $stagedExe --stop-agent | Out-String) -match 'Agent stopped'
+    # The old EXE may be refused by Smart App Control; then no agent can be running from it.
+    try { $agentWasRunning = (& $stagedExe --stop-agent | Out-String) -match 'Agent stopped' } catch { }
 }
 
 Get-AppxPackage -Name $PackageName | ForEach-Object {

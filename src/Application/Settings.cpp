@@ -7,7 +7,7 @@ namespace et::app {
 
 namespace {
 
-constexpr std::wstring_view kHeader = L"ExMate-Settings 1";
+constexpr std::wstring_view kHeader = L"ExplorerMate-Settings 1";
 constexpr std::wstring_view kHotkeysKey = L"hotkeys";
 constexpr std::wstring_view kNoChord = L"none";
 constexpr std::array<ActionKind, 3> kAllActions{ActionKind::GroupIntoNewFolder,

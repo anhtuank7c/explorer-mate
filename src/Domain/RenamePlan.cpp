@@ -124,7 +124,7 @@ std::wstring MakeTemporaryName(const std::vector<std::wstring>& siblingNames,
                                const std::vector<RenameStep>& steps,
                                const INameCollation& collation) {
     for (size_t counter = 1;; ++counter) {
-        const std::wstring candidate = L"~exmate-" + std::to_wstring(counter) + L".tmp";
+        const std::wstring candidate = L"~explorermate-" + std::to_wstring(counter) + L".tmp";
         const bool usedByTarget =
             std::any_of(previews.begin(), previews.end(), [&](const RenamePreview& preview) {
                 return collation.Equals(preview.renamed, candidate);

@@ -227,7 +227,7 @@ public:
         const ReversedCollation collation;
         domain::RenamePattern pattern = NameMask(L"p_[C]");
         pattern.counterDigits = 1;
-        const Names folder{L"p_1.txt", L"p_2.txt", L"~exmate-1.tmp"};
+        const Names folder{L"p_1.txt", L"p_2.txt", L"~explorermate-1.tmp"};
         const auto plan =
             domain::BuildRenamePlan({L"p_1.txt", L"p_2.txt"}, folder, L"Trip", pattern, collation);
         Assert::IsTrue(plan.ok());

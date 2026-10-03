@@ -16,7 +16,7 @@ struct ActionRequest {
 };
 
 // Line-based text format (file names cannot contain line breaks on Windows):
-//   ExMate-Request 1
+//   ExplorerMate-Request 1
 //   action=<wire name>
 //   item=<absolute path>      (one line per item)
 std::wstring SerializeRequest(const ActionRequest& request);

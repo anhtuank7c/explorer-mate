@@ -269,7 +269,7 @@ public:
         Assert::IsTrue(names.ok());
         std::vector<std::wstring> sorted = names.value();
         std::sort(sorted.begin(), sorted.end());
-        Assert::IsTrue(sorted == std::vector<std::wstring>{L".exmate-fixture", L"Sub", L"a.txt"});
+        Assert::IsTrue(sorted == std::vector<std::wstring>{L".explorermate-fixture", L"Sub", L"a.txt"});
         Assert::IsFalse(probe.ListNames((fixture.root() / L"gone").wstring()).ok());
     }
 

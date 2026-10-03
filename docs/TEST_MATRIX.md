@@ -12,7 +12,7 @@ Chạy bằng `scripts\test.ps1` trên cả Debug và Release: 107/107 PASS (th�
 |---|---|---|
 | Unit — Domain | Tách stem/extension, luật tên Windows, đường dẫn, collation, selection, rename mask (placeholder, dải ký tự, mask sai), kế hoạch đổi tên (bộ đếm, tìm–thay thế, thứ tự, trùng, chuỗi phụ thuộc, vòng) | 41 |
 | Unit — Application | Ba use case với filesystem giả: thành công, hủy, lỗi từng phần, race tạo folder, selection không hợp lệ; định dạng request | 24 |
-| Integration — Shell | `IFileOperation` thật trên `%TEMP%\ExMate.Tests`: duplicate file/cây thư mục, move, đổi tên chuỗi/hoán đổi, dừng ở lỗi đầu, không ghi đè; probe; collation Windows; use case gom nhóm đầu-cuối | 15 |
+| Integration — Shell | `IFileOperation` thật trên `%TEMP%\ExplorerMate.Tests`: duplicate file/cây thư mục, move, đổi tên chuỗi/hoán đổi, dừng ở lỗi đầu, không ghi đè; probe; collation Windows; use case gom nhóm đầu-cuối | 15 |
 | Integration — khác | Request file (ngoài thư mục, sai đuôi, UTF-8 hỏng, dọn file cũ), logger, COM apartment, kích hoạt ba lệnh qua `DllGetClassObject` | 9 |
 
 ## Bán tự động (script điều khiển bản đã cài)
@@ -25,8 +25,8 @@ Chạy bằng `scripts\test.ps1` trên cả Debug và Release: 107/107 PASS (th�
 | Request file được dọn sau khi dùng | đếm file trong `requests` | PASS — 0 |
 | Dialog gom nhóm: gợi ý, tên trùng, ký tự cấm, OK, Cancel | `probe-dialog.ps1` | PASS |
 | Dialog đổi tên (bản mask): mặc định `[N]_[C]`, mask sai, ô số trống, mask thiếu bộ đếm, nút chèn, OK với mặc định, OK với `[P] [C]` + start/step/digits + tìm–thay thế, Cancel | `probe-dialog.ps1` | PASS |
-| CLI: duplicate, group, hủy, từ chối folder | `ExMate.exe --action ... --silent` | PASS |
-| CLI: rename với cờ mask (`--mask "[C]-[N1-1]" --ext-mask md --start 5 --step 5 --digits 3` → `005-a.md`, `010-b.md`; mask sai → exit 1) | `ExMate.exe --action rename --silent` | PASS |
+| CLI: duplicate, group, hủy, từ chối folder | `ExplorerMate.exe --action ... --silent` | PASS |
+| CLI: rename với cờ mask (`--mask "[C]-[N1-1]" --ext-mask md --start 5 --step 5 --digits 3` → `005-a.md`, `010-b.md`; mask sai → exit 1) | `ExplorerMate.exe --action rename --silent` | PASS |
 
 ### Giai đoạn 2 (phím tắt)
 

@@ -54,23 +54,25 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\test.ps1 -Configurat
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-dev.ps1 -StartAgent
 ```
 
-Uninstall with `scripts\uninstall-dev.ps1`. The tests only create and delete files under `%TEMP%\ExMate.Tests`.
+Uninstall with `scripts\uninstall-dev.ps1`. The tests only create and delete files under `%TEMP%\ExplorerMate.Tests`.
 
 `scripts\package-msix.ps1` builds the release-style MSIX package (unsigned unless you pass a certificate).
+
+If **Smart App Control** is on, Windows may refuse to run an unsigned build ("An Application Control policy has blocked this file"). The verdict differs from one build to the next; rebuilding usually produces a binary that is accepted. Signed releases are not affected.
 
 ## Using it
 
 Select files or folders in File Explorer and right-click; Windows may group the three commands under "Explorer Mate". With the tray agent running, the shortcuts in the table above work while the file list has the keyboard focus. Click the tray icon to change shortcuts, toggle "Start with Windows" or exit.
 
-Running `ExMate.exe` with no arguments opens an introduction window. There is also a command line:
+Running `ExplorerMate.exe` with no arguments opens an introduction window. There is also a command line:
 
 ```powershell
-ExMate.exe --action duplicate D:\Work\a.txt D:\Work\Assets
-ExMate.exe --action group --name "Project A" D:\Work\a.txt D:\Work\b.jpg
-ExMate.exe --action rename --mask "Trip_[C]" D:\Photos\IMG_7.jpg D:\Photos\IMG_12.jpg
+ExplorerMate.exe --action duplicate D:\Work\a.txt D:\Work\Assets
+ExplorerMate.exe --action group --name "Project A" D:\Work\a.txt D:\Work\b.jpg
+ExplorerMate.exe --action rename --mask "Trip_[C]" D:\Photos\IMG_7.jpg D:\Photos\IMG_12.jpg
 ```
 
-If a command does nothing, check the logs in `%LOCALAPPDATA%\ExMate\logs`.
+If a command does nothing, check the logs in `%LOCALAPPDATA%\ExplorerMate\logs`.
 
 ## How it is built
 
@@ -148,23 +150,25 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\test.ps1 -Configurat
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-dev.ps1 -StartAgent
 ```
 
-Gỡ bằng `scripts\uninstall-dev.ps1`. Test chỉ tạo và xóa file trong `%TEMP%\ExMate.Tests`.
+Gỡ bằng `scripts\uninstall-dev.ps1`. Test chỉ tạo và xóa file trong `%TEMP%\ExplorerMate.Tests`.
 
 `scripts\package-msix.ps1` dựng gói MSIX kiểu phát hành (chưa ký, trừ khi bạn truyền chứng thư).
+
+Nếu máy bật **Smart App Control**, Windows có thể từ chối chạy bản build chưa ký ("An Application Control policy has blocked this file"). Phán quyết khác nhau giữa các lần build; build lại thường cho ra file được chấp nhận. Bản phát hành đã ký không bị ảnh hưởng.
 
 ## Cách dùng
 
 Chọn file hoặc thư mục trong File Explorer rồi bấm chuột phải; Windows có thể gom ba lệnh vào mục "Explorer Mate". Khi agent ở khay đang chạy, các phím tắt trong bảng trên hoạt động lúc danh sách file đang giữ con trỏ bàn phím. Bấm icon ở khay để đổi phím tắt, bật/tắt "Start with Windows" hoặc thoát.
 
-Chạy `ExMate.exe` không kèm tham số sẽ mở cửa sổ giới thiệu. Ngoài ra có dòng lệnh:
+Chạy `ExplorerMate.exe` không kèm tham số sẽ mở cửa sổ giới thiệu. Ngoài ra có dòng lệnh:
 
 ```powershell
-ExMate.exe --action duplicate D:\Work\a.txt D:\Work\Assets
-ExMate.exe --action group --name "Project A" D:\Work\a.txt D:\Work\b.jpg
-ExMate.exe --action rename --mask "DaLat_[C]" D:\Anh\IMG_7.jpg D:\Anh\IMG_12.jpg
+ExplorerMate.exe --action duplicate D:\Work\a.txt D:\Work\Assets
+ExplorerMate.exe --action group --name "Project A" D:\Work\a.txt D:\Work\b.jpg
+ExplorerMate.exe --action rename --mask "DaLat_[C]" D:\Anh\IMG_7.jpg D:\Anh\IMG_12.jpg
 ```
 
-Nếu bấm lệnh mà không có gì xảy ra, xem log trong `%LOCALAPPDATA%\ExMate\logs`.
+Nếu bấm lệnh mà không có gì xảy ra, xem log trong `%LOCALAPPDATA%\ExplorerMate\logs`.
 
 ## Công cụ được xây dựng thế nào
 

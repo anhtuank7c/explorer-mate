@@ -10,18 +10,18 @@
 
 namespace et::tests {
 
-// A private directory under %TEMP%\ExMate.Tests. It is only deleted when the ownership
+// A private directory under %TEMP%\ExplorerMate.Tests. It is only deleted when the ownership
 // marker written at creation is still present, so a wrong path can never be wiped.
 class TempFixture {
 public:
     TempFixture() {
-        root_ = std::filesystem::temp_directory_path() / L"ExMate.Tests" /
+        root_ = std::filesystem::temp_directory_path() / L"ExplorerMate.Tests" /
                 (std::to_wstring(GetCurrentProcessId()) + L"-" + std::to_wstring(GetTickCount64()) +
                  L"-" + std::to_wstring(++NextId()));
         std::filesystem::create_directories(root_);
         // %TEMP% is often an 8.3 short path; the Shell reports long paths.
         root_ = std::filesystem::canonical(root_);
-        std::ofstream(root_ / kMarkerName) << "ExMate test fixture";
+        std::ofstream(root_ / kMarkerName) << "ExplorerMate test fixture";
     }
 
     ~TempFixture() {
@@ -37,7 +37,7 @@ public:
     const std::filesystem::path& root() const { return root_; }
 
 private:
-    static constexpr const wchar_t* kMarkerName = L".exmate-fixture";
+    static constexpr const wchar_t* kMarkerName = L".explorermate-fixture";
 
     static std::atomic<unsigned>& NextId() {
         static std::atomic<unsigned> next{0};

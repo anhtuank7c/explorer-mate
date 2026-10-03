@@ -99,13 +99,13 @@ public:
     TEST_METHOD(RejectsMalformedSettingsText) {
         for (const wchar_t* text : {
                  L"",
-                 L"ExMate-Settings 2\nhotkeys=on\n",
-                 L"ExMate-Settings 1\nhotkeys=maybe\n",
-                 L"ExMate-Settings 1\nformat=Ctrl+Alt+F\n",
-                 L"ExMate-Settings 1\ngroup=N\n",
-                 L"ExMate-Settings 1\ngroup=Ctrl+Alt+N\nrename=Ctrl+Alt+N\n",
-                 L"ExMate-Settings 1\ngroup=Ctrl+Alt+N\ngroup=Ctrl+Alt+M\n",
-                 L"ExMate-Settings 1\nnonsense\n",
+                 L"ExplorerMate-Settings 2\nhotkeys=on\n",
+                 L"ExplorerMate-Settings 1\nhotkeys=maybe\n",
+                 L"ExplorerMate-Settings 1\nformat=Ctrl+Alt+F\n",
+                 L"ExplorerMate-Settings 1\ngroup=N\n",
+                 L"ExplorerMate-Settings 1\ngroup=Ctrl+Alt+N\nrename=Ctrl+Alt+N\n",
+                 L"ExplorerMate-Settings 1\ngroup=Ctrl+Alt+N\ngroup=Ctrl+Alt+M\n",
+                 L"ExplorerMate-Settings 1\nnonsense\n",
              }) {
             Assert::IsFalse(app::ParseSettings(text).ok(), text);
         }

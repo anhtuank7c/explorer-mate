@@ -7,7 +7,7 @@ std::wstring_view ProductName() {
 }
 
 std::wstring_view ProductShortName() {
-    return L"ExMate";
+    return L"ExplorerMate";
 }
 
 std::wstring_view ProductVersion() {

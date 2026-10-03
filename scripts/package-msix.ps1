@@ -1,5 +1,5 @@
 # Builds the release MSIX: a full package with the binaries inside (not the sparse package
-# used for development). Output: build\package\ExMate_<version>_x64.msix (unsigned unless a
+# used for development). Output: build\package\ExplorerMate_<version>_x64.msix (unsigned unless a
 # certificate is given). The Store signs packages itself; for GitHub/WinGet pass -CertificatePath.
 #
 #   -RegisterLoose   instead of using the .msix, register the unpacked layout for the current
@@ -11,9 +11,9 @@ param(
     [ValidateSet('Debug', 'Release')][string]$Configuration = 'Release',
     [ValidatePattern('^\d+\.\d+\.\d+\.\d+$')][string]$Version = '0.1.0.0',
     # Must match the Partner Center identity (Store) or the certificate subject (GitHub).
-    [string]$IdentityName = 'ExMate',
-    [string]$Publisher = 'CN=ExMate Dev',
-    [string]$PublisherDisplayName = 'ExMate Dev',
+    [string]$IdentityName = 'ExplorerMate',
+    [string]$Publisher = 'CN=ExplorerMate Dev',
+    [string]$PublisherDisplayName = 'Tuan Nguyen',
     [string]$CertificatePath,
     [securestring]$CertificatePassword,
     [switch]$RegisterLoose
@@ -33,22 +33,23 @@ function Get-SdkTool([string]$name) {
 $binDir = Join-Path $RepoRoot "build\x64\$Configuration"
 $packageDir = Join-Path $RepoRoot 'build\package'
 $layoutDir = Join-Path $packageDir 'layout'
-$binaries = @('ExMate.exe', 'ExMate.Shell.dll')
+$binaries = @('ExplorerMate.exe', 'ExplorerMate.Shell.dll')
 foreach ($name in $binaries) {
     if (-not (Test-Path (Join-Path $binDir $name))) {
         throw "Missing $name in $binDir. Run scripts\build.ps1 -Configuration $Configuration first."
     }
 }
 
-if ($RegisterLoose -and (Get-AppxPackage -Name 'ExMate.Dev')) {
-    throw 'The development package "ExMate.Dev" is registered. Both packages would add the same menu commands twice. Run scripts\uninstall-dev.ps1 first.'
+if ($RegisterLoose -and (Get-AppxPackage -Name 'ExplorerMate.Dev')) {
+    throw 'The development package "ExplorerMate.Dev" is registered. Both packages would add the same menu commands twice. Run scripts\uninstall-dev.ps1 first.'
 }
 
 # A previously registered loose layout may have its agent running from the layout folder.
-$layoutExe = Join-Path $layoutDir 'ExMate.exe'
+$layoutExe = Join-Path $layoutDir 'ExplorerMate.exe'
 $agentWasRunning = $false
 if (Test-Path $layoutExe) {
-    $agentWasRunning = (& $layoutExe --stop-agent | Out-String) -match 'Agent stopped'
+    # The old EXE may be refused by Smart App Control; then no agent can be running from it.
+    try { $agentWasRunning = (& $layoutExe --stop-agent | Out-String) -match 'Agent stopped' } catch { }
 }
 
 # --- Layout ------------------------------------------------------------------------------
@@ -83,7 +84,7 @@ if ($RegisterLoose) {
 }
 
 # --- Pack --------------------------------------------------------------------------------
-$msix = Join-Path $packageDir "ExMate_${Version}_x64.msix"
+$msix = Join-Path $packageDir "ExplorerMate_${Version}_x64.msix"
 & (Get-SdkTool 'makeappx.exe') pack /d $layoutDir /p $msix /o | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "makeappx failed (exit code $LASTEXITCODE)." }
 Write-Host "Packed $msix"

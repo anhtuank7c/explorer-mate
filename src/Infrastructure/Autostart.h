@@ -10,7 +10,7 @@ namespace et::infra {
 // the value named after the product is ever read, written or deleted.
 bool IsAutostartEnabled();
 
-// `commandLine` is what Windows runs at sign-in, e.g. "\"C:\...\ExMate.exe\" --agent".
+// `commandLine` is what Windows runs at sign-in, e.g. "\"C:\...\ExplorerMate.exe\" --agent".
 domain::Status SetAutostart(bool enabled, const std::wstring& commandLine);
 
 }  // namespace et::infra

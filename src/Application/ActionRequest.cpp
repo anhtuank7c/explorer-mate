@@ -9,7 +9,7 @@ namespace et::app {
 
 namespace {
 
-constexpr std::wstring_view kHeader = L"ExMate-Request 1";
+constexpr std::wstring_view kHeader = L"ExplorerMate-Request 1";
 constexpr std::wstring_view kActionKey = L"action=";
 constexpr std::wstring_view kItemKey = L"item=";
 constexpr size_t kMaxItems = 100000;

@@ -1,7 +1,7 @@
-# Verifies that ExMate identifies the active File Explorer tab and its selection.
+# Verifies that ExplorerMate identifies the active File Explorer tab and its selection.
 # Opens ONE new Explorer window on fixture folders under %TEMP%, adds two more tabs (one on a
 # different folder, one on the same folder with a different selection), activates each tab in
-# turn and compares what `ExMate.exe --diagnose-explorer` reports with what was set up.
+# turn and compares what `ExplorerMate.exe --diagnose-explorer` reports with what was set up.
 # Other Explorer windows are not touched. The window is closed at the end.
 [CmdletBinding()]
 param(
@@ -16,11 +16,11 @@ Add-Type -Namespace ET -Name Native -MemberDefinition @'
 public static extern bool PostMessageW(System.IntPtr window, uint message, System.IntPtr wParam, System.IntPtr lParam);
 '@
 
-$exe = Join-Path $RepoRoot "build\x64\$Configuration\ExMate.exe"
+$exe = Join-Path $RepoRoot "build\x64\$Configuration\ExplorerMate.exe"
 if (-not (Test-Path $exe)) { throw "Build first: $exe not found." }
 
 # --- Fixture -------------------------------------------------------------------------------
-$root = Join-Path ([IO.Path]::GetTempPath()) ("ExMate.Tests\tabs-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$root = Join-Path ([IO.Path]::GetTempPath()) ("ExplorerMate.Tests\tabs-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $folderA = (New-Item -ItemType Directory -Force (Join-Path $root 'FolderA')).FullName
 $folderB = (New-Item -ItemType Directory -Force (Join-Path $root 'FolderB')).FullName
 foreach ($name in 'a1.txt', 'a2.txt', 'a3.txt') { Set-Content (Join-Path $folderA $name) 'x' }
@@ -95,7 +95,7 @@ try {
         'FolderA|a2.txt,a3.txt'
     )
 
-    # --- Activate each tab and ask ExMate what it sees ------------------------------
+    # --- Activate each tab and ask ExplorerMate what it sees ------------------------------
     $seen = @()
     $tabItems = @(Get-TabItems)
     if ($tabItems.Count -ne 3) { throw "Expected 3 tab items in the tab strip, found $($tabItems.Count)." }
@@ -125,8 +125,8 @@ try {
         }
         $active = @($tabs | Where-Object Active)
         $observed = if ($active.Count -eq 1) { "$($active[0].Folder)|$($active[0].Selection)" } else { "<$($active.Count) active tabs>" }
-        Write-Host ("UI tab '{0}': ExMate sees {1} tabs in the frame, active -> {2}" -f $tabItem.Current.Name, $tabs.Count, $observed)
-        if ($tabs.Count -ne 3) { $failures += "Expected 3 tabs in the frame, ExMate saw $($tabs.Count)." }
+        Write-Host ("UI tab '{0}': ExplorerMate sees {1} tabs in the frame, active -> {2}" -f $tabItem.Current.Name, $tabs.Count, $observed)
+        if ($tabs.Count -ne 3) { $failures += "Expected 3 tabs in the frame, ExplorerMate saw $($tabs.Count)." }
         if ($active.Count -ne 1) { $failures += "Expected exactly one active tab, got $($active.Count)." }
         $seen += $observed
     }
@@ -174,7 +174,7 @@ finally {
         [void][ET.Native]::PostMessageW([IntPtr]$frame, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero)  # WM_CLOSE
         Start-Sleep -Milliseconds 800
     }
-    if ($root -like '*\ExMate.Tests\tabs-*') { Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue }
+    if ($root -like '*\ExplorerMate.Tests\tabs-*') { Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue }
 }
 
 if ($failures.Count -gt 0) {

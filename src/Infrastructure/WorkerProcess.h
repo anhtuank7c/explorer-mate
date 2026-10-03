@@ -9,7 +9,7 @@
 
 namespace et::infra {
 
-// A started ExMate.exe worker carrying out one request. Move-only; owns the process
+// A started ExplorerMate.exe worker carrying out one request. Move-only; owns the process
 // handle. Destroying it does not stop the worker.
 class WorkerProcess {
 public:

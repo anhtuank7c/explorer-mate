@@ -38,7 +38,7 @@ public:
         const TempFixture fixture;
         const infra::RequestFileStore store((fixture.root() / L"requests").wstring());
         const fs::path outside = fixture.root() / L"elsewhere" / L"x.etreq";
-        WriteText(outside, "ExMate-Request 1\naction=duplicate\nitem=D:\\a.txt\n");
+        WriteText(outside, "ExplorerMate-Request 1\naction=duplicate\nitem=D:\\a.txt\n");
         const fs::path traversal = fixture.root() / L"requests" / L".." / L"elsewhere" / L"x.etreq";
 
         Assert::IsFalse(store.Take(outside.wstring()).ok());
@@ -50,8 +50,8 @@ public:
         const TempFixture fixture;
         const fs::path directory = fixture.root() / L"requests";
         const infra::RequestFileStore store(directory.wstring());
-        WriteText(directory / L"note.txt", "ExMate-Request 1\naction=duplicate\nitem=D:\\a.txt\n");
-        WriteText(directory / L"bad-utf8.etreq", "ExMate-Request 1\naction=duplicate\nitem=D:\\\xFF\xFE\n");
+        WriteText(directory / L"note.txt", "ExplorerMate-Request 1\naction=duplicate\nitem=D:\\a.txt\n");
+        WriteText(directory / L"bad-utf8.etreq", "ExplorerMate-Request 1\naction=duplicate\nitem=D:\\\xFF\xFE\n");
         WriteText(directory / L"garbage.etreq", "hello");
 
         Assert::IsFalse(store.Take((directory / L"note.txt").wstring()).ok());

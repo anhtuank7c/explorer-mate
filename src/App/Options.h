@@ -10,7 +10,7 @@
 
 namespace et::ui {
 
-// Command line of ExMate.exe:
+// Command line of ExplorerMate.exe:
 //   (no arguments) or --about              show the introduction window
 //   --version
 //   --request <file>                       run the request written by the shell extension

@@ -1,4 +1,4 @@
-# Starts ExMate.exe interactively and drives its dialog from outside the process:
+# Starts ExplorerMate.exe interactively and drives its dialog from outside the process:
 # reads the controls, optionally types into them, then presses OK or Cancel.
 # Lets the dialogs be smoke-tested without a person at the keyboard.
 [CmdletBinding()]
@@ -51,7 +51,7 @@ public static class DialogProbe {
 }
 '@
 
-$exe = Join-Path $RepoRoot "build\x64\$Configuration\ExMate.exe"
+$exe = Join-Path $RepoRoot "build\x64\$Configuration\ExplorerMate.exe"
 $arguments = @('--action', $Action) + ($Path | ForEach-Object { '"' + $_ + '"' })
 $process = Start-Process $exe -ArgumentList $arguments -PassThru
 

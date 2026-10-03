@@ -4,20 +4,21 @@ param()
 
 . (Join-Path $PSScriptRoot 'Common.ps1')
 
-$PackageName = 'ExMate.Dev'
+$PackageName = 'ExplorerMate.Dev'
 $stageDir = Join-Path $RepoRoot 'build\install'
 
 # Stop the agent and drop its "Start with Windows" entry, but only if that entry points at
 # this development install.
-$stagedExe = Join-Path $stageDir 'ExMate.exe'
+$stagedExe = Join-Path $stageDir 'ExplorerMate.exe'
 if (Test-Path $stagedExe) {
-    & $stagedExe --stop-agent | Out-Null
+    # The EXE may be refused by Smart App Control; then no agent can be running from it.
+    try { & $stagedExe --stop-agent | Out-Null } catch { }
 }
 $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $runValue = (Get-ItemProperty $runKey -ErrorAction SilentlyContinue).PSObject.Properties |
-    Where-Object { $_.Name -eq 'ExMate' }
+    Where-Object { $_.Name -eq 'ExplorerMate' }
 if ($runValue -and ([string]$runValue.Value).IndexOf($stageDir, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
-    Remove-ItemProperty $runKey -Name 'ExMate'
+    Remove-ItemProperty $runKey -Name 'ExplorerMate'
     Write-Host 'Removed the "Start with Windows" entry.'
 }
 

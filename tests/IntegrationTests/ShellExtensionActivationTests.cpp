@@ -32,7 +32,7 @@ std::filesystem::path ShellExtensionPath() {
         reinterpret_cast<LPCWSTR>(&ShellExtensionPath), &self);
     wchar_t buffer[MAX_PATH]{};
     GetModuleFileNameW(self, buffer, MAX_PATH);
-    return std::filesystem::path(buffer).parent_path() / L"ExMate.Shell.dll";
+    return std::filesystem::path(buffer).parent_path() / L"ExplorerMate.Shell.dll";
 }
 
 // The DLL stays loaded for the whole test run; unloading a WRL module mid-run buys nothing.

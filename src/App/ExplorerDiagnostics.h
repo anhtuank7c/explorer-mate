@@ -9,7 +9,7 @@ void PrintExplorerDiagnostics(unsigned delaySeconds);
 
 // Records, for `seconds`, one line every time the foreground window, the keyboard focus, the
 // active tab or its selection changes. Lines go to stdout and to
-// %LOCALAPPDATA%\ExMate\logs\tab-watch.log so a person can click through a scenario
+// %LOCALAPPDATA%\ExplorerMate\logs\tab-watch.log so a person can click through a scenario
 // and the result can be read afterwards.
 void WatchExplorer(unsigned seconds);
 

@@ -18,12 +18,12 @@ public static extern bool PostMessageW(System.IntPtr window, uint message, Syste
 public static extern System.IntPtr FindWindowW(string className, string windowName);
 '@
 
-$exe = Join-Path $RepoRoot "build\x64\$Configuration\ExMate.exe"
+$exe = Join-Path $RepoRoot "build\x64\$Configuration\ExplorerMate.exe"
 if (-not (Test-Path $exe)) { throw "Build first: $exe not found." }
 $HotkeyMessage = 0x8002        # WM_APP + 2, see src\App\Agent.cpp
 $DuplicateAction = 2           # app::ActionKind::DuplicateInPlace
 
-$root = Join-Path ([IO.Path]::GetTempPath()) ("ExMate.Tests\agent-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$root = Join-Path ([IO.Path]::GetTempPath()) ("ExplorerMate.Tests\agent-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $folder = (New-Item -ItemType Directory -Force $root).FullName
 foreach ($name in 'a1.txt', 'a2.txt') { Set-Content (Join-Path $folder $name) 'x' }
 
@@ -75,7 +75,7 @@ try {
     }
 
     Start-Process $exe -ArgumentList '--agent'
-    $agent = Wait-Until { $handle = [ET.AgentNative]::FindWindowW('ExMateAgentWindow', [NullString]::Value); if ($handle -ne [IntPtr]::Zero) { $handle } } 'the agent window'
+    $agent = Wait-Until { $handle = [ET.AgentNative]::FindWindowW('ExplorerMateAgentWindow', [NullString]::Value); if ($handle -ne [IntPtr]::Zero) { $handle } } 'the agent window'
 
     # 1. File list focused: the shortcut duplicates the selected file.
     [void][ET.AgentNative]::PostMessageW($agent, $HotkeyMessage, [IntPtr]$DuplicateAction, [IntPtr]::Zero)
@@ -102,7 +102,7 @@ try {
 finally {
     & $exe --stop-agent | Out-Null
     if ($frame -ne 0) { [void][ET.AgentNative]::PostMessageW([IntPtr]$frame, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero); Start-Sleep -Milliseconds 800 }
-    if ($root -like '*\ExMate.Tests\agent-*') { Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue }
+    if ($root -like '*\ExplorerMate.Tests\agent-*') { Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue }
 }
 
 if ($failures.Count -gt 0) {

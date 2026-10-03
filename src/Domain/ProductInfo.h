@@ -6,7 +6,7 @@ namespace et::domain {
 
 // "Explorer Mate": what the user sees in window titles, the tray icon and messages.
 std::wstring_view ProductName();
-// "ExMate": the identifier used where a space would be awkward - the data folder under
+// "ExplorerMate": the identifier used where a space would be awkward - the data folder under
 // %LOCALAPPDATA%, the autostart registry value, file names.
 std::wstring_view ProductShortName();
 std::wstring_view ProductVersion();

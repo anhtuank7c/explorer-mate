@@ -7,7 +7,7 @@ namespace et::ui {
 domain::Status LaunchWorker(const app::ActionRequest& request) {
     // Resolved from this module so no search path is involved.
     const std::wstring executable = infra::SiblingPathOfModule(
-        reinterpret_cast<const void*>(&LaunchWorker), L"ExMate.exe");
+        reinterpret_cast<const void*>(&LaunchWorker), L"ExplorerMate.exe");
     const auto worker = infra::WorkerProcess::Start(executable, request);
     if (!worker.ok()) {
         return worker.error();

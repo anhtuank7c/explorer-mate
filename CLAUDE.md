@@ -1,4 +1,4 @@
-# Explorer Mate (tên ngắn: ExMate)
+# Explorer Mate (tên ngắn: ExplorerMate)
 
 Tiện ích C++ native thêm ba lệnh vào menu chuột phải của File Explorer trên Windows 11: gom vào thư mục mới, đổi tên hàng loạt (mask kiểu Total Commander), nhân bản tại chỗ; kèm phím tắt qua agent ở khay. Tiến độ và kế hoạch phát hành: `docs/PROGRESS.md`.
 ## Lệnh
@@ -24,12 +24,12 @@ Phụ thuộc chỉ đi vào trong; `scripts\check-layers.ps1` kiểm tra bằng
 | Domain | `src/Domain` | `et::domain` | Chỉ C++ standard library |
 | Application | `src/Application` | `et::app` | Domain |
 | Infrastructure | `src/Infrastructure` | `et::infra` | Application, Domain, Windows SDK |
-| Presentation | `src/App` (`ExMate.exe`), `src/ShellExtension` (`ExMate.Shell.dll`) | `et::ui` | Tất cả |
+| Presentation | `src/App` (`ExplorerMate.exe`), `src/ShellExtension` (`ExplorerMate.Shell.dll`) | `et::ui` | Tất cả |
 
 - Use case nằm ở Application, mỗi cái một class; phụ thuộc bên ngoài đi qua port (interface) khai báo ở Application và hiện thực ở Infrastructure/App.
-- DLL menu không chạy nghiệp vụ: chỉ ghi request file rồi launch `ExMate.exe`.
-- DLL menu chạy trong `DllHost.exe` (COM surrogate có package identity), không phải `explorer.exe`. Manifest tắt `FileSystemWriteVirtualization` để surrogate ghi thẳng vào `%LOCALAPPDATA%\ExMate`; đừng bỏ dòng đó.
-- Thử một lệnh đã đăng ký mà không cần GUI: `& .\scripts\probe-command.ps1 -Clsid <clsid> -Path <item1>,<item2>`. Log của DLL: `%LOCALAPPDATA%\ExMate\logs\shell.log`.
+- DLL menu không chạy nghiệp vụ: chỉ ghi request file rồi launch `ExplorerMate.exe`.
+- DLL menu chạy trong `DllHost.exe` (COM surrogate có package identity), không phải `explorer.exe`. Manifest tắt `FileSystemWriteVirtualization` để surrogate ghi thẳng vào `%LOCALAPPDATA%\ExplorerMate`; đừng bỏ dòng đó.
+- Thử một lệnh đã đăng ký mà không cần GUI: `& .\scripts\probe-command.ps1 -Clsid <clsid> -Path <item1>,<item2>`. Log của DLL: `%LOCALAPPDATA%\ExplorerMate\logs\shell.log`.
 - Thử dialog không cần người bấm: `& .\scripts\probe-dialog.ps1 -Action group|rename -Path <items> [-SetText @{<controlId>='text'}] [-Press ok]`.
 - Sửa DLL/EXE xong phải chạy lại `install-dev.ps1` thì menu mới dùng bản mới.
 - Không đặt tên phương thức trùng macro của `windows.h` (`CreateDirectory`, `MoveFile`, `CopyFile`, `DeleteFile`...).
@@ -47,11 +47,14 @@ Phụ thuộc chỉ đi vào trong; `scripts\check-layers.ps1` kiểm tra bằng
 - Script PowerShell phải chạy được trên Windows PowerShell 5.1 và chỉ dùng ký tự ASCII.
 - Test dùng Microsoft C++ Unit Test Framework; test không được chạm file ngoài fixture trong `%TEMP%`.
 
-- Agent phím tắt: `ExMate.exe --agent` / `--stop-agent`. `install-dev.ps1` tự dừng và chạy lại agent; build không bị chặn vì agent chạy từ `build\install`.
-- Kiểm tra nhận diện tab/focus: `scripts\test-tab-detection.ps1` (tự mở và đóng một cửa sổ Explorer trên fixture). Xem trạng thái hiện tại: `ExMate.exe --diagnose-explorer | Out-String`.
+- Agent phím tắt: `ExplorerMate.exe --agent` / `--stop-agent`. `install-dev.ps1` tự dừng và chạy lại agent; build không bị chặn vì agent chạy từ `build\install`.
+- Kiểm tra nhận diện tab/focus: `scripts\test-tab-detection.ps1` (tự mở và đóng một cửa sổ Explorer trên fixture). Xem trạng thái hiện tại: `ExplorerMate.exe --diagnose-explorer | Out-String`.
 - EXE là GUI-subsystem: trong PowerShell phải đưa vào pipeline (`| Out-String`, `| ForEach-Object`) thì mới chờ và lấy được output.
 - `HotkeyMatcher` bỏ qua phím injected nên không thể test hook bằng `SendInput`/`SendKeys`.
 - Callback của keyboard hook chỉ được làm việc rẻ (không COM, không I/O); việc nặng đi qua `PostMessage`.
+
+- Máy dev bật Smart App Control: mỗi file EXE chưa ký mới build có thể bị chặn ("An Application Control policy has blocked this file"), không đoán trước được và gắn với từng file. Kiểm tra bằng `ExplorerMate.exe --version | Out-String` sau khi build; nếu bị chặn thì xóa `build\obj\App` và build lại. Không tắt Smart App Control thay người dùng.
+- Version resource (để Task Manager hiện "Explorer Mate") chỉ được nhúng khi build với `build.ps1 -EmbedVersionInfo`, dành cho bản sẽ ký.
 
 ## Giới hạn an toàn
 

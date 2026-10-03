@@ -18,6 +18,14 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <!-- Version resources (file description, product name) are only embedded on request:
+       Smart App Control blocked unsigned builds that carried them, unpredictably from one
+       build to the next. Pass /p:EmbedVersionInfo=true for builds that will be signed. -->
+  <ItemDefinitionGroup Condition="'$(EmbedVersionInfo)' == 'true'">
+    <ResourceCompile>
+      <PreprocessorDefinitions>ET_EMBED_VERSION_INFO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
   <!-- Static CRT: the shell extension and worker must run without the VC++ redistributable. -->
   <ItemDefinitionGroup Condition="'$(Configuration)' == 'Debug'">
     <ClCompile>

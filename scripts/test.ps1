@@ -14,7 +14,7 @@ if (-not $NoBuild) {
 }
 
 $outDir = Join-Path $RepoRoot "build\x64\$Configuration"
-$testDlls = @('ExMate.UnitTests.dll', 'ExMate.IntegrationTests.dll') |
+$testDlls = @('ExplorerMate.UnitTests.dll', 'ExplorerMate.IntegrationTests.dll') |
     ForEach-Object { Join-Path $outDir $_ }
 foreach ($dll in $testDlls) {
     if (-not (Test-Path $dll)) { throw "Test binary not found: $dll" }

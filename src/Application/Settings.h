@@ -35,7 +35,7 @@ struct Settings {
 std::optional<domain::Error> ValidateSettings(const Settings& settings);
 
 // Line-based text:
-//   ExMate-Settings 1
+//   ExplorerMate-Settings 1
 //   hotkeys=on|off
 //   <action wire name>=<chord>|none
 std::wstring SerializeSettings(const Settings& settings);

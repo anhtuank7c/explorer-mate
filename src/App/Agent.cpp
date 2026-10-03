@@ -26,8 +26,8 @@ namespace et::ui {
 
 namespace {
 
-constexpr const wchar_t* kWindowClass = L"ExMateAgentWindow";
-constexpr const wchar_t* kInstanceMutex = L"Local\\ExMate.Agent";
+constexpr const wchar_t* kWindowClass = L"ExplorerMateAgentWindow";
+constexpr const wchar_t* kInstanceMutex = L"Local\\ExplorerMate.Agent";
 constexpr UINT kTrayMessage = WM_APP + 1;
 constexpr UINT kHotkeyMessage = WM_APP + 2;
 constexpr UINT kTrayIconId = 1;
@@ -51,7 +51,7 @@ public:
         : log_(DataPath(L"\\logs\\agent.log")),
           settingsFile_(DataPath(L"\\settings.txt")),
           executable_(infra::SiblingPathOfModule(reinterpret_cast<const void*>(&RunAgent),
-                                                 L"ExMate.exe")) {}
+                                                 L"ExplorerMate.exe")) {}
 
     int Run() {
         LoadSettings();

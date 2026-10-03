@@ -23,7 +23,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <PropertyGroup>
-    <TargetName>ExMate.IntegrationTests</TargetName>
+    <TargetName>ExplorerMate.IntegrationTests</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>

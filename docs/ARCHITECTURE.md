@@ -1,4 +1,4 @@
-# Kiến trúc ExMate
+# Kiến trúc ExplorerMate
 
 ## Luồng một lệnh
 
@@ -6,11 +6,11 @@
 File Explorer
    │  chuột phải → Invoke(IShellItemArray)
    ▼
-DllHost.exe  ── ExMate.Shell.dll (src/ShellExtension)
-   │  đọc đường dẫn, ghi %LOCALAPPDATA%\ExMate\requests\<guid>.etreq
-   │  CreateProcess: ExMate.exe --request <file>
+DllHost.exe  ── ExplorerMate.Shell.dll (src/ShellExtension)
+   │  đọc đường dẫn, ghi %LOCALAPPDATA%\ExplorerMate\requests\<guid>.etreq
+   │  CreateProcess: ExplorerMate.exe --request <file>
    ▼
-ExMate.exe (src/App)
+ExplorerMate.exe (src/App)
    │  đọc + xóa request, validate lại, mở dialog nếu cần
    ▼
 Use case (src/Application) ──port──> adapter Windows (src/Infrastructure) ──> IFileOperation
@@ -71,13 +71,13 @@ Thêm một lệnh mới: một use case, một class trong `Commands.cpp`, mộ
 ## Phím tắt (Giai đoạn 2)
 
 ```text
-bàn phím ──WH_KEYBOARD_LL──> Agent (ExMate.exe --agent, icon khay)
+bàn phím ──WH_KEYBOARD_LL──> Agent (ExplorerMate.exe --agent, icon khay)
                                │ HotkeyMatcher: đúng chord? focus ở file list?
                                │ PostMessage cho chính nó (ra khỏi hook)
                                ▼
                              ExplorerSelectionSource: tab nào, selection gì
                                ▼
-                             WorkerProcess: request file + ExMate.exe --request
+                             WorkerProcess: request file + ExplorerMate.exe --request
 ```
 
 Từ worker trở đi giống hệt đường menu. Agent không tự thao tác file.
@@ -85,7 +85,7 @@ Từ worker trở đi giống hệt đường menu. Agent không tự thao tác 
 - **Trong hook chỉ có việc rẻ:** `HotkeyMatcher` (thuần, đã unit test) và `FocusIsInFileList` (vài lời gọi user32). COM, `IShellWindows`, khởi động tiến trình đều chạy sau, trên message loop.
 - **Xác định tab:** foreground là `CabinetWClass`; đúng một tab của frame đó đang hiện (cửa sổ `ShellTabWindowClass` đứng đầu); focus là `DirectUIHWND` con trực tiếp của `SHELLDLL_DefView` của chính tab đó. Lệch bất kỳ điểm nào thì từ chối — không bao giờ lấy "tab đầu tiên".
 - **Fail-closed:** modifier không bao giờ bị nuốt; phím giả lập bị bỏ qua; AltGr (Right Alt) không tính là Alt; khi worker còn chạy thì không chặn phím nào; khóa/đổi session thì xóa trạng thái phím đang giữ.
-- **Một agent mỗi session** (mutex `Local\ExMate.Agent`). Settings ở `%LOCALAPPDATA%\ExMate\settings.txt`; file hỏng thì chạy bằng mặc định và giữ nguyên file.
+- **Một agent mỗi session** (mutex `Local\ExplorerMate.Agent`). Settings ở `%LOCALAPPDATA%\ExplorerMate\settings.txt`; file hỏng thì chạy bằng mặc định và giữ nguyên file.
 - **Điểm yếu đã biết:** cửa sổ agent nhận thông điệp nội bộ "đã bấm phím tắt" từ bất kỳ tiến trình nào cùng người dùng. Thứ bị tác động vẫn chỉ là selection trong tab đang focus.
 
 ## ADR-1: Đóng gói bằng sparse package, đăng ký qua Developer Mode
