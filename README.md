@@ -49,13 +49,16 @@ On macOS, Finder lets you select a few files and choose "New Folder with Selecti
 
 Select files or folders in File Explorer and right-click; Windows may group the three commands under "Explorer Mate". With the tray agent running, the shortcuts in the table above work while the file list has the keyboard focus. Click the tray icon to change shortcuts, toggle "Start with Windows" or exit.
 
-Running `ExplorerMate.exe` with no arguments opens an introduction window. There is also a command line:
+Opening Explorer Mate from the Start menu shows an introduction window. There is also a command line: once installed, `explorermate` works in any terminal, with paths relative to the current folder.
 
 ```powershell
-ExplorerMate.exe --action duplicate D:\Work\a.txt D:\Work\Assets
-ExplorerMate.exe --action group --name "Project A" D:\Work\a.txt D:\Work\b.jpg
-ExplorerMate.exe --action rename --mask "Trip_[C]" D:\Photos\IMG_7.jpg D:\Photos\IMG_12.jpg
+explorermate --action duplicate report.docx Assets
+explorermate --action group --name "Project A" a.txt b.jpg
+explorermate --action rename --mask "Trip_[C]" IMG_7.jpg IMG_12.jpg
+explorermate --help
 ```
+
+Without `--name` or a rename option the usual dialog asks for it; `--silent` runs with no windows at all. Wildcards such as `*.jpg` are not expanded.
 
 If a command does nothing, check the logs in `%LOCALAPPDATA%\ExplorerMate\logs`.
 
@@ -245,13 +248,16 @@ Trên macOS, Finder cho phép chọn vài file rồi bấm "New Folder with Sele
 
 Chọn file hoặc thư mục trong File Explorer rồi bấm chuột phải; Windows có thể gom ba lệnh vào mục "Explorer Mate". Khi agent ở khay đang chạy, các phím tắt trong bảng trên hoạt động lúc danh sách file đang giữ con trỏ bàn phím. Bấm icon ở khay để đổi phím tắt, bật/tắt "Start with Windows" hoặc thoát.
 
-Chạy `ExplorerMate.exe` không kèm tham số sẽ mở cửa sổ giới thiệu. Ngoài ra có dòng lệnh:
+Mở Explorer Mate từ Start menu sẽ hiện cửa sổ giới thiệu. Ngoài ra có dòng lệnh: sau khi cài, gõ `explorermate` trong bất kỳ terminal nào, đường dẫn có thể tương đối so với thư mục hiện tại.
 
 ```powershell
-ExplorerMate.exe --action duplicate D:\Work\a.txt D:\Work\Assets
-ExplorerMate.exe --action group --name "Project A" D:\Work\a.txt D:\Work\b.jpg
-ExplorerMate.exe --action rename --mask "DaLat_[C]" D:\Anh\IMG_7.jpg D:\Anh\IMG_12.jpg
+explorermate --action duplicate report.docx Assets
+explorermate --action group --name "Project A" a.txt b.jpg
+explorermate --action rename --mask "DaLat_[C]" IMG_7.jpg IMG_12.jpg
+explorermate --help
 ```
+
+Không truyền `--name` hoặc tùy chọn đổi tên thì hộp thoại quen thuộc sẽ hỏi; `--silent` chạy mà không hiện cửa sổ nào. Ký tự đại diện như `*.jpg` chưa được bung.
 
 Nếu bấm lệnh mà không có gì xảy ra, xem log trong `%LOCALAPPDATA%\ExplorerMate\logs`.
 

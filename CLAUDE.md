@@ -49,6 +49,7 @@ Phụ thuộc chỉ đi vào trong; `scripts\check-layers.ps1` kiểm tra bằng
 
 - Agent phím tắt: `ExplorerMate.exe --agent` / `--stop-agent`. `install-dev.ps1` tự dừng và chạy lại agent; build không bị chặn vì agent chạy từ `build\install`.
 - Kiểm tra nhận diện tab/focus: `scripts\test-tab-detection.ps1` (tự mở và đóng một cửa sổ Explorer trên fixture). Xem trạng thái hiện tại: `ExplorerMate.exe --diagnose-explorer | Out-String`.
+- Bản cài (manifest release) có alias `explorermate` (app execution alias kiểu console): terminal chờ và in output, không cần pipeline. Manifest dev (sparse) chưa có alias.
 - EXE là GUI-subsystem: trong PowerShell phải đưa vào pipeline (`| Out-String`, `| ForEach-Object`) thì mới chờ và lấy được output.
 - `HotkeyMatcher` bỏ qua phím injected nên không thể test hook bằng `SendInput`/`SendKeys`.
 - Callback của keyboard hook chỉ được làm việc rẻ (không COM, không I/O); việc nặng đi qua `PostMessage`.

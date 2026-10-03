@@ -78,7 +78,17 @@ if ($RegisterLoose) {
         try { $agentWasRunning = (& $layoutExe --stop-agent | Out-String) -match 'Agent stopped' } catch { }
     }
     Write-PackageLayout $layoutDir
-    Add-AppxPackage -Register (Join-Path $layoutDir 'AppxManifest.xml')
+    $layoutManifest = Join-Path $layoutDir 'AppxManifest.xml'
+    try {
+        Add-AppxPackage -Register $layoutManifest -ErrorAction Stop
+    } catch {
+        # 0x80073CFB: the manifest changed but the version did not. Windows then wants the old
+        # registration removed first; the application's data (settings) is kept.
+        if ($_.Exception.Message -notmatch '0x80073CFB') { throw }
+        Write-Host 'The manifest changed: removing the old registration (settings are kept) and registering again.'
+        Get-AppxPackage -Name $IdentityName | Remove-AppxPackage -PreserveApplicationData
+        Add-AppxPackage -Register $layoutManifest -ErrorAction Stop
+    }
     $package = Get-AppxPackage -Name $IdentityName
     Write-Host "Registered loose layout: $($package.PackageFullName)"
     if ($agentWasRunning) {

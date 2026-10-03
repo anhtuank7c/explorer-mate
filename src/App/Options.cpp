@@ -22,6 +22,18 @@ bool IsOption(const std::wstring& argument) {
     return argument.rfind(L"--", 0) == 0;
 }
 
+// Options that are followed by a value.
+bool TakesValue(const std::wstring& option) {
+    for (const wchar_t* known : {L"--request", L"--action", L"--name", L"--delay", L"--watch",
+                                 L"--mask", L"--ext-mask", L"--search", L"--replace", L"--start",
+                                 L"--step", L"--digits"}) {
+        if (option == known) {
+            return true;
+        }
+    }
+    return false;
+}
+
 }  // namespace
 
 domain::Result<Options> ParseOptions(const std::vector<std::wstring>& arguments) {
@@ -37,6 +49,10 @@ domain::Result<Options> ParseOptions(const std::vector<std::wstring>& arguments)
 
     for (size_t index = 0; index < arguments.size(); ++index) {
         const std::wstring& argument = arguments[index];
+        if (argument == L"--help" || argument == L"-h" || argument == L"/?") {
+            options.showHelp = true;
+            continue;
+        }
         if (!IsOption(argument)) {
             options.items.push_back(argument);
             continue;
@@ -74,6 +90,9 @@ domain::Result<Options> ParseOptions(const std::vector<std::wstring>& arguments)
             continue;
         }
 
+        if (!TakesValue(argument)) {
+            return UsageError(L"Unknown option: " + argument);
+        }
         if (index + 1 == arguments.size()) {
             return UsageError(L"Missing value for " + argument);
         }
@@ -122,7 +141,7 @@ domain::Result<Options> ParseOptions(const std::vector<std::wstring>& arguments)
         }
     }
 
-    if (options.showVersion || options.showAbout || options.showChangelog || options.showLicenses ||
+    if (options.showHelp || options.showVersion || options.showAbout || options.showChangelog || options.showLicenses ||
         options.diagnoseExplorer || options.runAgent ||
         options.stopAgent) {
         return options;
@@ -139,6 +158,45 @@ domain::Result<Options> ParseOptions(const std::vector<std::wstring>& arguments)
         return UsageError(L"No items given.");
     }
     return options;
+}
+
+std::wstring UsageText() {
+    return L"Explorer Mate - extra File Explorer commands, from the command line.\n"
+           L"\n"
+           L"Usage:\n"
+           L"  explorermate --action group     <item>... [--name <folder name>]\n"
+           L"  explorermate --action rename    <file>... [rename options]\n"
+           L"  explorermate --action duplicate <item>...\n"
+           L"\n"
+           L"Items are files or folders in the same folder. Paths may be absolute or relative to\n"
+           L"the current folder. Without --name or rename options a dialog asks for them.\n"
+           L"\n"
+           L"Rename options (any one is enough, the rest keep their defaults):\n"
+           L"  --mask <name mask>      default [N]_[C]\n"
+           L"  --ext-mask <mask>       default [E]\n"
+           L"  --start <n> --step <n> --digits <n>   counter [C]; default 1, 1, 1\n"
+           L"  --search <text> --replace <text>\n"
+           L"  Masks: [N] name, [N2-5] characters 2 to 5, [N3-] from character 3, [E] extension,\n"
+           L"         [C] counter, [P] parent folder, [[] and []] brackets.\n"
+           L"\n"
+           L"Other options:\n"
+           L"  --silent        no dialogs, no progress window, no undo record\n"
+           L"  --version       print the version\n"
+           L"  --help          print this text\n"
+           L"  --about         open the introduction window\n"
+           L"  --changelog     open the \"What's new\" window\n"
+           L"  --licenses      open the licenses window\n"
+           L"  --agent         start the tray agent (keyboard shortcuts)\n"
+           L"  --stop-agent    stop the tray agent\n"
+           L"  --diagnose-explorer [--delay <seconds>] [--watch <seconds>]\n"
+           L"                  print open File Explorer tabs, focus and selections\n"
+           L"\n"
+           L"Exit codes: 0 done, 1 failed or not everything completed, 2 wrong usage, 3 cancelled.\n"
+           L"\n"
+           L"Examples:\n"
+           L"  explorermate --action duplicate report.docx\n"
+           L"  explorermate --action group --name \"Day 1\" IMG_2041.jpg IMG_2042.jpg\n"
+           L"  explorermate --action rename --mask \"Trip_[C]\" --digits 3 a.jpg b.jpg c.jpg";
 }
 
 }  // namespace et::ui

@@ -13,6 +13,7 @@ All notable changes to Explorer Mate are recorded here. The format follows
 - Keyboard shortcuts through a tray agent, active only in Explorer's file list; configurable from the tray icon.
 - Command line for the three commands, an introduction window, and Explorer diagnostics.
 - The introduction window links to the source code and the issue tracker, and has a "What's new" window showing this changelog and a "Licenses" window with the third-party notices.
+- `explorermate` command in any terminal (app execution alias), `--help`, and item paths relative to the current folder.
 - Development install through a sparse package; release-style MSIX packaging script.
 
 ### Fixed

@@ -321,6 +321,16 @@ Chưa làm / để lại:
 - `ChangelogDialog` đổi tên thành `DocumentDialog`, dùng chung cho cả hai cửa sổ.
 - Đây là rà soát kỹ thuật, không phải tư vấn pháp lý. Giấy phép của các công cụ build (MIT) ghi theo hiểu biết, chưa mở từng repo để đối chiếu lại.
 
+## Dòng lệnh `explorermate` (03/10/2026)
+
+- Manifest release khai báo app execution alias `explorermate.exe` (`uap5`, `desktop4:Subsystem="console"`); Windows bắt buộc kèm `desktop4:SupportsMultipleInstances="true"` trên `Application`.
+- `--help` (cũng nhận `-h`, `/?`) in cách dùng; lỗi cú pháp gợi ý chạy `--help`; option lạ báo "Unknown option" thay vì "Missing value".
+- Đường dẫn mục có thể tương đối so với thư mục hiện tại; bỏ dấu `\` cuối (tab completion).
+- Output: ghi UTF-8 vào stdout khi bị chuyển hướng (pipe/file), ngược lại ghi vào console của terminal cha (`AttachConsole`).
+- Đã kiểm tra trên fixture `%TEMP%`: PowerShell `explorermate --version`, duplicate file + thư mục bằng đường dẫn tương đối, group; mã thoát 0 và 2; file kết quả có ngay sau khi lệnh trả về (terminal chờ). Chụp cửa sổ cmd thật: output hiện đúng thứ tự trước dấu nhắc.
+- `package-msix.ps1 -RegisterLoose`: khi manifest đổi mà version không đổi (0x80073CFB) thì gỡ đăng ký cũ với `-PreserveApplicationData` rồi đăng ký lại.
+- Chưa làm: bung ký tự đại diện (`*.jpg`); alias cho manifest dev (sparse). NOT RUN: Windows Terminal; gói MSIX đã đóng gói và ký (mới thử bản loose).
+
 ## Giai đoạn 3 — Phát hành
 
 Kênh: Microsoft Store, WinGet, file tải trực tiếp từ GitHub. Cả ba dùng chung một gói MSIX đầy đủ; bản dev vẫn dùng sparse package.

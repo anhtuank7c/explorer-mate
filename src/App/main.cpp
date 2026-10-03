@@ -57,7 +57,11 @@ void PrintReport(const et::domain::OperationReport& report) {
 
 et::domain::Result<et::app::ActionRequest> LoadRequest(const et::ui::Options& options) {
     if (!options.requestFile) {
-        return et::app::ActionRequest{*options.action, options.items};
+        std::vector<std::wstring> items;
+        for (const std::wstring& item : options.items) {
+            items.push_back(et::ui::AbsoluteItemPath(item));
+        }
+        return et::app::ActionRequest{*options.action, std::move(items)};
     }
     const auto dataDirectory = et::infra::ProductDataDirectory();
     if (!dataDirectory.ok()) {
@@ -73,7 +77,12 @@ int Run(const std::vector<std::wstring>& arguments) {
     const auto options = et::ui::ParseOptions(arguments);
     if (!options.ok()) {
         et::ui::WriteLineToStdout(options.error().message);
+        et::ui::WriteLineToStdout(L"Run with --help to see the command line.");
         return kExitUsage;
+    }
+    if (options.value().showHelp) {
+        et::ui::WriteLineToStdout(et::ui::UsageText());
+        return kExitOk;
     }
     if (options.value().showVersion) {
         et::ui::WriteLineToStdout(std::wstring(et::domain::ProductName()) + L" " +

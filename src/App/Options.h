@@ -13,8 +13,9 @@ namespace et::ui {
 // Command line of ExplorerMate.exe:
 //   (no arguments) or --about              show the introduction window
 //   --version
+//   --help
 //   --request <file>                       run the request written by the shell extension
-//   --action <group|rename|duplicate> <item>...
+//   --action <group|rename|duplicate> <item>...   items may be relative to the current folder
 // Optional with either form:
 //   --silent                               no Shell UI and no undo record
 //   --name <folder name>                   answer for "group" instead of asking
@@ -29,6 +30,7 @@ namespace et::ui {
 //   --diagnose-explorer [--delay <seconds>]  dump Explorer tabs, focus and selections
 struct Options {
     bool showVersion = false;
+    bool showHelp = false;
     bool showAbout = false;
     bool showChangelog = false;
     bool showLicenses = false;
@@ -46,5 +48,8 @@ struct Options {
 };
 
 domain::Result<Options> ParseOptions(const std::vector<std::wstring>& arguments);
+
+// The text printed by --help.
+std::wstring UsageText();
 
 }  // namespace et::ui

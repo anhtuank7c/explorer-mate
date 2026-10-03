@@ -6,11 +6,12 @@
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
   xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
   xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
-  IgnorableNamespaces="uap rescap desktop4 desktop5 com">
+  IgnorableNamespaces="uap uap5 rescap desktop4 desktop5 com">
   <Identity
     Name="@@IDENTITY_NAME@@"
     Publisher="@@PUBLISHER@@"
@@ -31,7 +32,9 @@
     <rescap:Capability Name="runFullTrust" />
   </Capabilities>
   <Applications>
-    <Application Id="ExplorerMate" Executable="ExplorerMate.exe" EntryPoint="Windows.FullTrustApplication">
+    <!-- SupportsMultipleInstances is required for a console execution alias; the program is
+         started once per command anyway, and the tray agent keeps itself to one instance. -->
+    <Application Id="ExplorerMate" Executable="ExplorerMate.exe" EntryPoint="Windows.FullTrustApplication" desktop4:SupportsMultipleInstances="true">
       <uap:VisualElements
         DisplayName="Explorer Mate"
         Description="Extra File Explorer commands: new folder with selection, bulk rename, duplicate"
@@ -39,6 +42,13 @@
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png" />
       <Extensions>
+        <!-- Lets "explorermate" be typed in any terminal. Declared as a console program so the
+             terminal waits for it and shows its output. -->
+        <uap5:Extension Category="windows.appExecutionAlias" Executable="ExplorerMate.exe" EntryPoint="Windows.FullTrustApplication">
+          <uap5:AppExecutionAlias desktop4:Subsystem="console">
+            <uap5:ExecutionAlias Alias="explorermate.exe" />
+          </uap5:AppExecutionAlias>
+        </uap5:Extension>
         <desktop4:Extension Category="windows.fileExplorerContextMenus">
           <desktop4:FileExplorerContextMenus>
             <!-- CLSIDs must match src/ShellExtension/Commands.cpp. -->
