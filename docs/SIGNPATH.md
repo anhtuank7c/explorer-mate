@@ -17,7 +17,7 @@ Why: a package downloaded from GitHub only installs if it is signed by a certifi
 | Product name and version in the binaries' metadata | Met in release builds (`build.ps1 -EmbedVersionInfo`): both the EXE and the DLL carry them. |
 | Every signing request approved by a person | To set up in SignPath when accepted. |
 | Multi-factor authentication for the repository and SignPath | **To do by the maintainer:** make sure two-factor authentication is on for the GitHub account. |
-| "Code signing policy" on the project page | **To add** (text below) once SignPath confirms, since it names them as the provider. |
+| "Code signing policy" on the project page | Met: README section, https://github.com/anhtuank7c/explorer-mate#code-signing-policy. The application form asks for this URL. It carries a "pending" note to remove on acceptance. |
 | Privacy policy | Met: `PRIVACY.md`. |
 | Uninstall instructions | Met by MSIX: Settings > Apps > Installed apps. Add one line to the README. |
 | No hacking tools, respects user privacy, announces system changes | Met. Worth stating in the application: the keyboard hook only recognises the configured shortcuts while a File Explorer file list has the focus, and records nothing. |
@@ -47,7 +47,7 @@ Apply at https://signpath.org/apply (the form itself was not readable when this 
 
 ## "Code signing policy" for the README
 
-To be added when SignPath accepts the project.
+Added to the README with a note that the application is pending; remove the note on acceptance.
 
 ```markdown
 ## Code signing policy

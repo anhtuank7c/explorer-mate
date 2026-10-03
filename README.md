@@ -191,6 +191,21 @@ The idea, the requirements and the hands-on testing are by **Tuan Nguyen** ([@an
 
 The bulk rename syntax is inspired by Total Commander; "New folder with selection" and "Duplicate" by macOS Finder. Explorer Mate is not affiliated with either, nor with Microsoft.
 
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+
+> Status: the application to SignPath Foundation is pending. Until it is accepted, the downloads on GitHub are **not** signed; the Microsoft Store signs the copy it distributes.
+
+- Committers and reviewers: [Tuan Nguyen (anhtuank7c)](https://github.com/anhtuank7c)
+- Approvers: [Tuan Nguyen (anhtuank7c)](https://github.com/anhtuank7c)
+
+Only packages built by the [Release workflow](.github/workflows/release.yml) from a version tag of this repository are submitted for signing, and each request is approved by hand.
+
+Privacy policy: [PRIVACY.md](PRIVACY.md). This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.
+
+To uninstall: Settings > Apps > Installed apps > Explorer Mate > Uninstall.
+
 ## License
 
 [MIT](LICENSE) © 2026 Tuan Nguyen.
