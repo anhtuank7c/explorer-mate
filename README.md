@@ -88,7 +88,7 @@ The bulk rename syntax is inspired by Total Commander; "New folder with selectio
 
 ## License
 
-Not chosen yet. Until a license is added, the usual default applies: all rights reserved.
+[MIT](LICENSE) © 2026 Tuan Nguyen.
 
 ---
 
@@ -182,4 +182,4 @@ Cú pháp đổi tên hàng loạt lấy cảm hứng từ Total Commander; "New
 
 ## Giấy phép
 
-Chưa chọn. Cho tới khi có giấy phép, mặc định thông thường được áp dụng: giữ mọi quyền.
+[MIT](LICENSE) © 2026 Tuan Nguyen.

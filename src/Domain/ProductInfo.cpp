@@ -14,9 +14,8 @@ std::wstring_view ProductVersion() {
     return L"0.1.0";
 }
 
-// Placeholder until the author provides the text to show.
 std::wstring_view ProductAuthor() {
-    return L"(your name here)";
+    return L"Tuan Nguyen";
 }
 
 std::wstring_view ProductWebsiteUrl() {
