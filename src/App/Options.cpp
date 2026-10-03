@@ -57,6 +57,10 @@ domain::Result<Options> ParseOptions(const std::vector<std::wstring>& arguments)
             options.showChangelog = true;
             continue;
         }
+        if (argument == L"--licenses") {
+            options.showLicenses = true;
+            continue;
+        }
         if (argument == L"--agent") {
             options.runAgent = true;
             continue;
@@ -118,7 +122,7 @@ domain::Result<Options> ParseOptions(const std::vector<std::wstring>& arguments)
         }
     }
 
-    if (options.showVersion || options.showAbout || options.showChangelog ||
+    if (options.showVersion || options.showAbout || options.showChangelog || options.showLicenses ||
         options.diagnoseExplorer || options.runAgent ||
         options.stopAgent) {
         return options;

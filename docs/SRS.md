@@ -180,6 +180,7 @@ flowchart LR
 |---|---|---|
 | FR-I1 | Starting the program with no arguments, `--about`, or "About…" in the tray menu shows the product name and version, a short description, the author, and links to the author's website, the source repository and its issue tracker. | manual; scripted read-back |
 | FR-I2 | "What's new" in the introduction window, or `--changelog`, shows the changelog that was embedded in the program at build time. | manual; screenshot |
+| FR-I3 | "Licenses" in the introduction window, or `--licenses`, shows the program's own license followed by the third-party notices, both embedded at build time. The same two files are shipped in the package. | manual; screenshot |
 | FR-I2 | The link opens the website in the default browser. | manual |
 
 ### 3.9 Command line

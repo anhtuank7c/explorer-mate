@@ -8,7 +8,7 @@
 #include <string>
 
 #include "App/AppIcon.h"
-#include "App/ChangelogDialog.h"
+#include "App/DocumentDialog.h"
 #include "App/resource.h"
 #include "Domain/ProductInfo.h"
 
@@ -74,6 +74,10 @@ INT_PTR CALLBACK AboutProc(HWND dialog, UINT message, WPARAM wParam, LPARAM lPar
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_ABOUT_CHANGELOG) {
                 ShowChangelog(dialog);
+                return TRUE;
+            }
+            if (LOWORD(wParam) == IDC_ABOUT_LICENSES) {
+                ShowLicenses(dialog);
                 return TRUE;
             }
             if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) {

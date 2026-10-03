@@ -6,7 +6,7 @@
 #include "App/AboutDialog.h"
 #include "App/ActionRunner.h"
 #include "App/Agent.h"
-#include "App/ChangelogDialog.h"
+#include "App/DocumentDialog.h"
 #include "App/CommandLine.h"
 #include "App/DialogPrompt.h"
 #include "App/ExplorerDiagnostics.h"
@@ -83,6 +83,10 @@ int Run(const std::vector<std::wstring>& arguments) {
 
     if (options.value().showChangelog) {
         et::ui::ShowChangelog(nullptr);
+        return kExitOk;
+    }
+    if (options.value().showLicenses) {
+        et::ui::ShowLicenses(nullptr);
         return kExitOk;
     }
     if (options.value().showAbout) {

@@ -31,6 +31,7 @@ struct Options {
     bool showVersion = false;
     bool showAbout = false;
     bool showChangelog = false;
+    bool showLicenses = false;
     bool runAgent = false;
     bool stopAgent = false;
     bool diagnoseExplorer = false;

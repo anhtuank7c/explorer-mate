@@ -312,6 +312,14 @@ Chưa làm / để lại:
 - Cửa sổ "What's new" (`ChangelogDialog`, cũng mở được bằng `--changelog`) hiển thị `CHANGELOG.md` được nhúng vào EXE lúc build (RCDATA), chuyển Markdown sang văn bản thường.
 - Đã chụp cả hai cửa sổ để kiểm tra bố cục. NOT RUN: bấm thử các liên kết (sẽ mở trình duyệt); ảnh Store `04-about.png` chưa chụp lại.
 
+## Giấy phép bên thứ ba (03/10/2026)
+
+- Rà soát toàn bộ file đang được git theo dõi, workflow CI và script: repo không chứa mã nguồn bên thứ ba, không dùng package manager. Thành phần mã nguồn mở duy nhất nằm trong sản phẩm là 3 icon Lucide (ISC); đã đối chiếu với LICENSE của Lucide 1.51.0: cả 3 không thuộc danh sách icon gốc Feather (MIT).
+- `THIRD_PARTY_NOTICES.md` viết lại: thành phần trong sản phẩm (Lucide; Microsoft STL - Apache-2.0 kèm LLVM exception; CRT/WRL/Windows SDK - giấy phép Microsoft), công cụ chỉ dùng khi build/test (GitHub Actions, CodeQL action, BinSkim - MIT), và phần tự làm.
+- Thêm nút "Licenses" ở About (cũng mở bằng `--licenses`), hiển thị `LICENSE` + `THIRD_PARTY_NOTICES.md` nhúng trong EXE. `package-msix.ps1` chép hai file này vào package.
+- `ChangelogDialog` đổi tên thành `DocumentDialog`, dùng chung cho cả hai cửa sổ.
+- Đây là rà soát kỹ thuật, không phải tư vấn pháp lý. Giấy phép của các công cụ build (MIT) ghi theo hiểu biết, chưa mở từng repo để đối chiếu lại.
+
 ## Giai đoạn 3 — Phát hành
 
 Kênh: Microsoft Store, WinGet, file tải trực tiếp từ GitHub. Cả ba dùng chung một gói MSIX đầy đủ; bản dev vẫn dùng sparse package.

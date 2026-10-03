@@ -28,13 +28,16 @@ param(
 
 . (Join-Path $PSScriptRoot 'Common.ps1')
 
-# Copies the binaries, logos and a filled-in manifest into $Directory.
+# Copies the binaries, logos, license texts and a filled-in manifest into $Directory.
 function Write-PackageLayout([string]$Directory) {
     New-Item -ItemType Directory -Force $Directory | Out-Null
     foreach ($name in $binaries) {
         Copy-Item (Join-Path $binDir $name) (Join-Path $Directory $name) -Force
     }
     Copy-Item (Join-Path $RepoRoot 'packaging\Assets') $Directory -Recurse -Force
+    # License texts travel with every copy of the binaries.
+    Copy-Item (Join-Path $RepoRoot 'LICENSE') (Join-Path $Directory 'LICENSE.txt') -Force
+    Copy-Item (Join-Path $RepoRoot 'THIRD_PARTY_NOTICES.md') (Join-Path $Directory 'THIRD_PARTY_NOTICES.md') -Force
 
     $manifest = [IO.File]::ReadAllText((Join-Path $RepoRoot 'packaging\release\AppxManifest.xml'))
     $tokens = @{
